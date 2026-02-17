@@ -3,6 +3,7 @@ local RunService = game:GetService("RunService")
 local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
 local Camera = workspace.CurrentCamera
+local Mouse = LocalPlayer:GetMouse()
 local UserInputService = game:GetService("UserInputService")
 
 -- AYARLAR
@@ -12,30 +13,19 @@ _G.SafeCheatConfig = {
     Traces = false,
     RGB_Mode = false,
     Fullbright = false,
-    NoRecoil = false,
+    -- Aimbot Ayarları
+    Aimbot = false,
+    ShowFOV = false,
+    AimSmoothness = 0.1,
+    AimbotFOV = 100,
     Key = "SafecheatGökalp"
 }
 
 -- [GUI ANA YAPI]
 local ScreenGui = Instance.new("ScreenGui", game.CoreGui)
-ScreenGui.Name = "SafeCheat_V42"
-
--- [SC GİZLE/GÖSTER BUTONU]
-local ToggleBtn = Instance.new("TextButton", ScreenGui)
-ToggleBtn.Size = UDim2.new(0, 50, 0, 50)
-ToggleBtn.Position = UDim2.new(0, 15, 0.5, 0)
-ToggleBtn.Text = "SC"
-ToggleBtn.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
-ToggleBtn.TextColor3 = Color3.fromRGB(0, 255, 255)
-ToggleBtn.Font = Enum.Font.GothamBold
-Instance.new("UICorner", ToggleBtn).CornerRadius = UDim.new(1, 0)
-local btnStroke = Instance.new("UIStroke", ToggleBtn)
-btnStroke.Color = Color3.fromRGB(0, 255, 255)
-
--- [ANA MENÜ]
 local MainFrame = Instance.new("Frame", ScreenGui)
-MainFrame.Size = UDim2.new(0, 420, 0, 300)
-MainFrame.Position = UDim2.new(0.5, -210, 0.5, -150)
+MainFrame.Size = UDim2.new(0, 420, 0, 350)
+MainFrame.Position = UDim2.new(0.5, -210, 0.5, -175)
 MainFrame.BackgroundColor3 = Color3.fromRGB(10, 10, 10)
 MainFrame.Visible = false
 MainFrame.Active = true
@@ -45,20 +35,29 @@ local MainStroke = Instance.new("UIStroke", MainFrame)
 MainStroke.Color = Color3.fromRGB(0, 255, 255)
 MainStroke.Thickness = 2
 
--- Yan Menü (Sekmeler)
+-- [FOVCircle]
+local FOVCircle = Drawing.new("Circle")
+FOVCircle.Thickness = 1
+FOVCircle.Transparency = 0.7
+FOVCircle.Color = Color3.fromRGB(0, 255, 255)
+FOVCircle.Filled = false
+
+-- [SC BUTONU]
+local ToggleBtn = Instance.new("TextButton", ScreenGui)
+ToggleBtn.Size = UDim2.new(0, 50, 0, 50)
+ToggleBtn.Position = UDim2.new(0, 15, 0.5, 0)
+ToggleBtn.Text = "SC"
+ToggleBtn.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
+ToggleBtn.TextColor3 = Color3.fromRGB(0, 255, 255)
+Instance.new("UICorner", ToggleBtn).CornerRadius = UDim.new(1, 0)
+ToggleBtn.MouseButton1Click:Connect(function() MainFrame.Visible = not MainFrame.Visible end)
+
+-- [SEKMELER]
 local TabSide = Instance.new("Frame", MainFrame)
 TabSide.Size = UDim2.new(0, 110, 1, 0)
 TabSide.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
 Instance.new("UICorner", TabSide)
 
-local Title = Instance.new("TextLabel", TabSide)
-Title.Size = UDim2.new(1, 0, 0, 40)
-Title.Text = "G&G V4.2"
-Title.TextColor3 = Color3.fromRGB(0, 255, 255)
-Title.Font = Enum.Font.GothamBold
-Title.BackgroundTransparency = 1
-
--- Bölme Konteynırları
 local Pages = {
     Visuals = Instance.new("ScrollingFrame", MainFrame),
     Combat = Instance.new("ScrollingFrame", MainFrame),
@@ -71,17 +70,9 @@ for name, page in pairs(Pages) do
     page.BackgroundTransparency = 1
     page.Visible = (name == "Visuals")
     page.ScrollBarThickness = 0
-    Instance.new("UIListLayout", page).Padding = UDim.new(0, 5)
+    Instance.new("UIListLayout", page).Padding = UDim.new(0, 8)
 end
 
--- Sekme Değiştirme Fonksiyonu
-local function ShowPage(pageName)
-    for name, page in pairs(Pages) do
-        page.Visible = (name == pageName)
-    end
-end
-
--- Sekme Butonları Oluştur
 local function CreateTab(name, pos)
     local btn = Instance.new("TextButton", TabSide)
     btn.Size = UDim2.new(1, -10, 0, 35)
@@ -90,15 +81,17 @@ local function CreateTab(name, pos)
     btn.Text = name
     btn.TextColor3 = Color3.fromRGB(150, 150, 150)
     btn.Font = Enum.Font.GothamBold
-    btn.MouseButton1Click:Connect(function() ShowPage(name) end)
+    btn.MouseButton1Click:Connect(function() 
+        for n, p in pairs(Pages) do p.Visible = (n == name) end 
+    end)
 end
 
 CreateTab("Visuals", UDim2.new(0, 5, 0, 50))
 CreateTab("Combat", UDim2.new(0, 5, 0, 90))
 CreateTab("Player", UDim2.new(0, 5, 0, 130))
 
--- Özellik Butonu Oluşturucu
-local function AddOption(parent, name, configName)
+-- [BİLEŞEN OLUŞTURUCULAR]
+local function AddToggle(parent, name, configName)
     local btn = Instance.new("TextButton", parent)
     btn.Size = UDim2.new(1, -5, 0, 35)
     btn.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
@@ -116,35 +109,77 @@ local function AddOption(parent, name, configName)
     end)
 end
 
--- Seçenekleri Ekle
-AddOption(Pages.Visuals, "Highlight ESP", "ESP")
-AddOption(Pages.Visuals, "Box ESP (Kutu)", "Box")
-AddOption(Pages.Visuals, "Distance Traces", "Traces")
-AddOption(Pages.Visuals, "RGB Mode", "RGB_Mode")
+local function AddSlider(parent, name, min, max, configName)
+    local bg = Instance.new("Frame", parent)
+    bg.Size = UDim2.new(1, -5, 0, 45)
+    bg.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+    Instance.new("UICorner", bg)
 
-AddOption(Pages.Combat, "No Recoil (Beta)", "NoRecoil")
+    local txt = Instance.new("TextLabel", bg)
+    txt.Size = UDim2.new(1, 0, 0, 20)
+    txt.Text = name .. ": " .. _G.SafeCheatConfig[configName]
+    txt.TextColor3 = Color3.fromRGB(200, 200, 200)
+    txt.BackgroundTransparency = 1
 
-AddOption(Pages.Player, "Fullbright", "Fullbright")
+    local slideBar = Instance.new("Frame", bg)
+    slideBar.Size = UDim2.new(0.8, 0, 0, 5)
+    slideBar.Position = UDim2.new(0.1, 0, 0.7, 0)
+    slideBar.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
 
--- Menü Açma/Kapama
-ToggleBtn.MouseButton1Click:Connect(function() MainFrame.Visible = not MainFrame.Visible end)
+    local dot = Instance.new("TextButton", slideBar)
+    dot.Size = UDim2.new(0, 15, 0, 15)
+    dot.Position = UDim2.new(0, 0, -1, 0)
+    dot.Text = ""
+    dot.BackgroundColor3 = Color3.fromRGB(0, 255, 255)
+    Instance.new("UICorner", dot)
 
--- [ESP VE BOX SİSTEMİ]
+    dot.MouseButton1Down:Connect(function()
+        local moveConn
+        moveConn = Mouse.Move:Connect(function()
+            local x = math.clamp((Mouse.X - slideBar.AbsolutePosition.X) / slideBar.AbsoluteSize.X, 0, 1)
+            dot.Position = UDim2.new(x, -7, -1, 0)
+            local val = math.floor(min + (max - min) * x)
+            if configName == "AimSmoothness" then val = x end
+            _G.SafeCheatConfig[configName] = val
+            txt.Text = name .. ": " .. string.format("%.2f", val)
+        end)
+        UserInputService.InputEnded:Connect(function(input)
+            if input.UserInputType == Enum.UserInputType.MouseButton1 then moveConn:Disconnect() end
+        end)
+    end)
+end
+
+-- [SEÇENEKLER]
+AddToggle(Pages.Visuals, "Highlight ESP", "ESP")
+AddToggle(Pages.Visuals, "Box ESP", "Box")
+AddToggle(Pages.Visuals, "Traces", "Traces")
+AddToggle(Pages.Visuals, "RGB Mode", "RGB_Mode")
+
+AddToggle(Pages.Combat, "Aimbot", "Aimbot")
+AddToggle(Pages.Combat, "Show FOV Circle", "ShowFOV")
+AddSlider(Pages.Combat, "Smoothness", 0, 1, "AimSmoothness")
+AddSlider(Pages.Combat, "FOV Size", 50, 500, "AimbotFOV")
+
+AddToggle(Pages.Player, "Fullbright", "Fullbright")
+
+-- [ANA DÖNGÜ]
 local espCache = {}
 
-local function UpdateESP()
+RunService.RenderStepped:Connect(function()
     local color = Color3.fromHSV(tick() % 5 / 5, 1, 1)
-    if _G.SafeCheatConfig.RGB_Mode then MainStroke.Color = color end
+    if _G.SafeCheatConfig.RGB_Mode then MainStroke.Color = color FOVCircle.Color = color end
+
+    -- FOV GÜNCELLEME
+    FOVCircle.Visible = _G.SafeCheatConfig.ShowFOV
+    FOVCircle.Radius = _G.SafeCheatConfig.AimbotFOV
+    FOVCircle.Position = Vector2.new(Mouse.X, Mouse.Y + 36)
+
+    local target = nil
+    local maxDist = _G.SafeCheatConfig.AimbotFOV
 
     for _, p in pairs(Players:GetPlayers()) do
         if p ~= LocalPlayer then
-            if not espCache[p] then
-                espCache[p] = {
-                    Box = Drawing.new("Square"),
-                    Line = Drawing.new("Line"),
-                    High = Instance.new("Highlight", game.CoreGui)
-                }
-            end
+            if not espCache[p] then espCache[p] = {B = Drawing.new("Square"), L = Drawing.new("Line"), H = Instance.new("Highlight", game.CoreGui)} end
             
             local char = p.Character
             local obj = espCache[p]
@@ -155,44 +190,45 @@ local function UpdateESP()
                 local dist = (LocalPlayer.Character.HumanoidRootPart.Position - root.Position).Magnitude
                 local dColor = _G.SafeCheatConfig.RGB_Mode and color or (dist < 50 and Color3.new(1,0,0) or Color3.new(0,1,0))
 
-                -- Highlight ESP
-                obj.High.Enabled = _G.SafeCheatConfig.ESP
-                obj.High.Adornee = char
-                obj.High.FillColor = dColor
+                -- ESP SİSTEMİ
+                obj.H.Enabled = _G.SafeCheatConfig.ESP
+                obj.H.Adornee = char
+                obj.H.FillColor = dColor
 
-                -- BOX ESP
                 if _G.SafeCheatConfig.Box and onScreen then
-                    local sizeX = 2000 / pos.Z
-                    local sizeY = 3000 / pos.Z
-                    obj.Box.Visible = true
-                    obj.Box.Size = Vector2.new(sizeX, sizeY)
-                    obj.Box.Position = Vector2.new(pos.X - sizeX/2, pos.Y - sizeY/2)
-                    obj.Box.Color = dColor
-                    obj.Box.Thickness = 1.5
-                else
-                    obj.Box.Visible = false
-                end
+                    local size = 2500 / pos.Z
+                    obj.B.Visible = true
+                    obj.B.Size = Vector2.new(size, size * 1.5)
+                    obj.B.Position = Vector2.new(pos.X - size/2, pos.Y - size*0.75)
+                    obj.B.Color = dColor
+                else obj.B.Visible = false end
 
-                -- TRACES
                 if _G.SafeCheatConfig.Traces and onScreen then
-                    obj.Line.Visible = true
-                    obj.Line.From = Vector2.new(Camera.ViewportSize.X/2, Camera.ViewportSize.Y)
-                    obj.Line.To = Vector2.new(pos.X, pos.Y)
-                    obj.Line.Color = dColor
-                else
-                    obj.Line.Visible = false
+                    obj.L.Visible = true
+                    obj.L.From = Vector2.new(Camera.ViewportSize.X/2, Camera.ViewportSize.Y)
+                    obj.L.To = Vector2.new(pos.X, pos.Y)
+                    obj.L.Color = dColor
+                else obj.L.Visible = false end
+
+                -- AIMBOT HEDEF SEÇİMİ
+                if _G.SafeCheatConfig.Aimbot and onScreen then
+                    local mouseDist = (Vector2.new(pos.X, pos.Y) - Vector2.new(Mouse.X, Mouse.Y)).Magnitude
+                    if mouseDist < maxDist then
+                        maxDist = mouseDist
+                        target = root
+                    end
                 end
             else
-                obj.High.Enabled = false
-                obj.Box.Visible = false
-                obj.Line.Visible = false
+                obj.H.Enabled = false obj.B.Visible = false obj.L.Visible = false
             end
         end
     end
-end
 
-RunService.RenderStepped:Connect(UpdateESP)
+    -- AIMBOT UYGULAMA
+    if _G.SafeCheatConfig.Aimbot and target then
+        local targetCFrame = CFrame.new(Camera.CFrame.Position, target.Position)
+        Camera.CFrame = Camera.CFrame:Lerp(targetCFrame, _G.SafeCheatConfig.AimSmoothness)
+    end
+end)
 
--- [KEY SİSTEMİ (V4.1'den)]
--- Not: Key sistemi kodu buraya eklenebilir veya KeyFrame direkt yaratılabilir.
--- G&G V4.2 Yüklendi!
+print("Safe Cheat V4.3: Aimbot & Slider System Loaded!")
