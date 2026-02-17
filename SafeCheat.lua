@@ -1,133 +1,131 @@
--- SafeCheat GUI
--- LocalScript olarak StarterPlayerScripts içine koy
+local Library = {} -- Basit bir kütüphane yapısı
 
-local Players = game:GetService("Players")
-local UserInputService = game:GetService("UserInputService")
+-- Başlangıç Ayarları
+local Player = game.Players.LocalPlayer
+local Mouse = Player:GetMouse()
+local RunService = game:GetService("RunService")
+local Camera = workspace.CurrentCamera
 
-local player = Players.LocalPlayer
+-- Özellik Durumları (Toggle States)
+local Flags = {
+    Aimbot = false,
+    ESP = false,
+    Speed = 16,
+    Jump = 50
+}
 
--- ScreenGui
+-- GUI OLUŞTURMA
 local ScreenGui = Instance.new("ScreenGui")
-ScreenGui.Name = "SafeCheat"
-ScreenGui.Parent = player:WaitForChild("PlayerGui")
+ScreenGui.Name = "SafeCheat_Main"
+ScreenGui.Parent = game.CoreGui
+ScreenGui.ResetOnSpawn = false
 
--- Main Frame
-local Main = Instance.new("Frame")
-Main.Size = UDim2.new(0, 600, 0, 350)
-Main.Position = UDim2.new(0.5, -300, 0.5, -175)
-Main.BackgroundColor3 = Color3.fromRGB(25,25,25)
-Main.BorderSizePixel = 0
-Main.Parent = ScreenGui
+local MainFrame = Instance.new("Frame")
+MainFrame.Size = UDim2.new(0, 400, 0, 300)
+MainFrame.Position = UDim2.new(0.5, -200, 0.5, -150)
+MainFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+MainFrame.BorderSizePixel = 0
+MainFrame.Active = true
+MainFrame.Draggable = true
+MainFrame.Parent = ScreenGui
 
--- Title
+local Corner = Instance.new("UICorner", MainFrame)
 local Title = Instance.new("TextLabel")
-Title.Size = UDim2.new(1,0,0,40)
-Title.BackgroundColor3 = Color3.fromRGB(35,35,35)
-Title.Text = "SafeCheat"
-Title.TextColor3 = Color3.new(1,1,1)
-Title.TextScaled = true
-Title.Parent = Main
+Title.Size = UDim2.new(1, 0, 0, 40)
+Title.Text = "SAFE CHEAT"
+Title.TextColor3 = Color3.fromRGB(0, 255, 255)
+Title.BackgroundTransparency = 1
+Title.Font = Enum.Font.GothamBold
+Title.TextSize = 20
+Title.Parent = MainFrame
 
--- Category Frame
-local CategoryFrame = Instance.new("Frame")
-CategoryFrame.Size = UDim2.new(0,150,1,-40)
-CategoryFrame.Position = UDim2.new(0,0,0,40)
-CategoryFrame.BackgroundColor3 = Color3.fromRGB(30,30,30)
-CategoryFrame.Parent = Main
+-- SEKME SİSTEMİ (Basit butonlar)
+local function CreateButton(name, pos, callback)
+    local btn = Instance.new("TextButton")
+    btn.Size = UDim2.new(0, 110, 0, 35)
+    btn.Position = pos
+    btn.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
+    btn.Text = name
+    btn.TextColor3 = Color3.fromRGB(255, 255, 255)
+    btn.Font = Enum.Font.Gotham
+    btn.Parent = MainFrame
+    Instance.new("UICorner", btn)
 
--- Module Frame
-local ModuleFrame = Instance.new("Frame")
-ModuleFrame.Size = UDim2.new(1,-150,1,-40)
-ModuleFrame.Position = UDim2.new(0,150,0,40)
-ModuleFrame.BackgroundColor3 = Color3.fromRGB(20,20,20)
-ModuleFrame.Parent = Main
-
--- UIListLayouts
-local CatLayout = Instance.new("UIListLayout", CategoryFrame)
-CatLayout.Padding = UDim.new(0,5)
-
-local ModLayout = Instance.new("UIListLayout", ModuleFrame)
-ModLayout.Padding = UDim.new(0,5)
-
--- Categories
-local categories = {"Visual", "Combat", "Player", "Misc"}
-
--- Clear modules
-local function ClearModules()
-	for _, child in pairs(ModuleFrame:GetChildren()) do
-		if child:IsA("TextButton") then
-			child:Destroy()
-		end
-	end
+    btn.MouseButton1Click:Connect(callback)
+    return btn
 end
 
--- Create Module Button
-local function CreateModule(name)
-	local btn = Instance.new("TextButton")
-	btn.Size = UDim2.new(1,-10,0,40)
-	btn.BackgroundColor3 = Color3.fromRGB(40,40,40)
-	btn.TextColor3 = Color3.new(1,1,1)
-	btn.Text = name .. " [OFF]"
-	btn.Parent = ModuleFrame
-	
-	local enabled = false
-	
-	btn.MouseButton1Click:Connect(function()
-		enabled = not enabled
-		if enabled then
-			btn.Text = name .. " [ON]"
-			btn.BackgroundColor3 = Color3.fromRGB(0,170,0)
-		else
-			btn.Text = name .. " [OFF]"
-			btn.BackgroundColor3 = Color3.fromRGB(40,40,40)
-		end
-	end)
+--- [VISUALS - ESP] ---
+local function UpdateESP()
+    for _, v in pairs(game.Players:GetPlayers()) do
+        if v ~= Player and v.Character and v.Character:FindFirstChild("HumanoidRootPart") then
+            local highlight = v.Character:FindFirstChild("SafeESP")
+            if Flags.ESP then
+                if not highlight then
+                    highlight = Instance.new("Highlight")
+                    highlight.Name = "SafeESP"
+                    highlight.FillColor = Color3.fromRGB(255, 0, 0)
+                    highlight.OutlineColor = Color3.fromRGB(255, 255, 255)
+                    highlight.FillTransparency = 0.5
+                    highlight.Parent = v.Character
+                end
+            else
+                if highlight then highlight:Destroy() end
+            end
+        end
+    end
 end
 
--- Load category modules
-local function LoadCategory(category)
-	ClearModules()
-	
-	if category == "Visual" then
-		CreateModule("ESP")
-		CreateModule("Fullbright")
-		CreateModule("Tracers")
-		
-	elseif category == "Combat" then
-		CreateModule("KillAura")
-		CreateModule("AutoClick")
-		
-	elseif category == "Player" then
-		CreateModule("Speed")
-		CreateModule("HighJump")
-		
-	elseif category == "Misc" then
-		CreateModule("AutoRespawn")
-		CreateModule("AntiAFK")
-	end
-end
-
--- Create Category Buttons
-for _, cat in ipairs(categories) do
-	local btn = Instance.new("TextButton")
-	btn.Size = UDim2.new(1,-10,0,40)
-	btn.BackgroundColor3 = Color3.fromRGB(50,50,50)
-	btn.TextColor3 = Color3.new(1,1,1)
-	btn.Text = cat
-	btn.Parent = CategoryFrame
-	
-	btn.MouseButton1Click:Connect(function()
-		LoadCategory(cat)
-	end)
-end
-
--- Toggle GUI with RightShift
-UserInputService.InputBegan:Connect(function(input, gp)
-	if gp then return end
-	if input.KeyCode == Enum.KeyCode.RightShift then
-		Main.Visible = not Main.Visible
-	end
+CreateButton("Toggle ESP", UDim2.new(0.05, 0, 0.2, 0), function()
+    Flags.ESP = not Flags.ESP
+    print("ESP: " .. tostring(Flags.ESP))
 end)
 
--- Default open category
-LoadCategory("Visual")
+--- [COMBAT - AIMBOT] ---
+CreateButton("Aimbot", UDim2.new(0.35, 0, 0.2, 0), function()
+    Flags.Aimbot = not Flags.Aimbot
+    print("Aimbot: " .. tostring(Flags.Aimbot))
+end)
+
+RunService.RenderStepped:Connect(function()
+    if Flags.Aimbot then
+        local closestPlayer = nil
+        local shortestDistance = math.huge
+
+        for _, v in pairs(game.Players:GetPlayers()) do
+            if v ~= Player and v.Character and v.Character:FindFirstChild("HumanoidRootPart") then
+                local pos, onScreen = Camera:WorldToViewportPoint(v.Character.HumanoidRootPart.Position)
+                if onScreen then
+                    local distance = (Vector2.new(pos.X, pos.Y) - Vector2.new(Mouse.X, Mouse.Y)).Magnitude
+                    if distance < shortestDistance then
+                        closestPlayer = v
+                        shortestDistance = distance
+                    end
+                end
+            end
+        end
+
+        if closestPlayer then
+            Camera.CFrame = CFrame.new(Camera.CFrame.Position, closestPlayer.Character.HumanoidRootPart.Position)
+        end
+    end
+    UpdateESP()
+end)
+
+--- [MISC - SPEED & JUMP] ---
+CreateButton("Speed (100)", UDim2.new(0.65, 0, 0.2, 0), function()
+    Player.Character.Humanoid.WalkSpeed = 100
+end)
+
+CreateButton("Inf Jump", UDim2.new(0.05, 0, 0.4, 0), function()
+    game:GetService("UserInputService").JumpRequest:Connect(function()
+        Player.Character:FindFirstChildOfClass("Humanoid"):ChangeState("Jumping")
+    end)
+end)
+
+CreateButton("Reset Stats", UDim2.new(0.35, 0, 0.4, 0), function()
+    Player.Character.Humanoid.WalkSpeed = 16
+    Player.Character.Humanoid.JumpPower = 50
+end)
+
+print("Safe Cheat Aktif Edildi!")
