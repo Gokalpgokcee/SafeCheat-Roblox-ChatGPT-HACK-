@@ -3,51 +3,42 @@ local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
 local Camera = workspace.CurrentCamera
 
--- AYARLAR
 _G.SafeCheatConfig = {
     Enabled = true,
     ESP = false,
     Traces = false,
     TeamCheck = true,
-    BoxColor = Color3.fromRGB(255, 0, 0), -- Rakipler genelde kırmızı olur
-    TraceColor = Color3.fromRGB(255, 255, 255)
+    BoxColor = Color3.fromRGB(255, 0, 0)
 }
 
--- GUI (Öncekiyle aynı, Delta uyumlu)
-local ScreenGui = Instance.new("ScreenGui")
-ScreenGui.Name = "SafeCheatV2_2"
-ScreenGui.Parent = game.CoreGui
-
-local ToggleButton = Instance.new("TextButton")
-ToggleButton.Size = UDim2.new(0, 50, 0, 50)
+-- [GUI KODU AYNI KALDI - DELTA BUTONU VE MENU]
+local ScreenGui = Instance.new("ScreenGui", game.CoreGui)
+local ToggleButton = Instance.new("TextButton", ScreenGui)
+ToggleButton.Size = UDim2.new(0, 45, 0, 45)
 ToggleButton.Position = UDim2.new(0, 10, 0.5, 0)
-ToggleButton.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
 ToggleButton.Text = "SC"
+ToggleButton.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
 ToggleButton.TextColor3 = Color3.fromRGB(0, 255, 255)
-ToggleButton.Parent = ScreenGui
 Instance.new("UICorner", ToggleButton).CornerRadius = UDim.new(1, 0)
 
-local MainFrame = Instance.new("Frame")
-MainFrame.Size = UDim2.new(0, 300, 0, 250)
-MainFrame.Position = UDim2.new(0.5, -150, 0.5, -125)
+local MainFrame = Instance.new("Frame", ScreenGui)
+MainFrame.Size = UDim2.new(0, 280, 0, 220)
+MainFrame.Position = UDim2.new(0.5, -140, 0.5, -110)
 MainFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
 MainFrame.Visible = false
+MainFrame.Active = true
 MainFrame.Draggable = true
-MainFrame.Parent = ScreenGui
 Instance.new("UICorner", MainFrame)
 
-ToggleButton.MouseButton1Click:Connect(function()
-    MainFrame.Visible = not MainFrame.Visible
-end)
+ToggleButton.MouseButton1Click:Connect(function() MainFrame.Visible = not MainFrame.Visible end)
 
 local function CreateToggle(name, pos, configName)
-    local btn = Instance.new("TextButton")
-    btn.Size = UDim2.new(0, 260, 0, 40)
+    local btn = Instance.new("TextButton", MainFrame)
+    btn.Size = UDim2.new(0, 240, 0, 40)
     btn.Position = pos
     btn.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
     btn.Text = name .. ": KAPALI"
     btn.TextColor3 = Color3.fromRGB(255, 0, 0)
-    btn.Parent = MainFrame
     Instance.new("UICorner", btn)
 
     btn.MouseButton1Click:Connect(function()
@@ -57,26 +48,36 @@ local function CreateToggle(name, pos, configName)
     end)
 end
 
-CreateToggle("ESP (Rakipler)", UDim2.new(0.06, 0, 0.25, 0), "ESP")
-CreateToggle("Traces (Çizgi)", UDim2.new(0.06, 0, 0.45, 0), "Traces")
-CreateToggle("Team Check (Aktif)", UDim2.new(0.06, 0, 0.65, 0), "TeamCheck")
+CreateToggle("ESP (Rakipler)", UDim2.new(0.07, 0, 0.2, 0), "ESP")
+CreateToggle("Traces (Çizgi)", UDim2.new(0.07, 0, 0.45, 0), "Traces")
+CreateToggle("Team Check", UDim2.new(0.07, 0, 0.7, 0), "TeamCheck")
 
---- YENİ NESİL TEAM CHECK MANTIĞI ---
+--- [YENİ: GÖRÜNTÜYE GÖRE ÖZEL TEAM CHECK] ---
 local function IsEnemy(player)
-    if not _G.SafeCheatConfig.TeamCheck then return true end -- Team check kapalıysa herkes düşman
+    if not _G.SafeCheatConfig.TeamCheck then return true end
     
-    local char = player.Character
-    if char then
-        -- Oyunun takım arkadaşlarını işaretlemek için kullandığı yaygın objeleri kontrol ediyoruz
-        -- 1. BillboardGui kontrolü (İsim etiketi kafasında var mı?)
-        local hasTag = char:FindFirstChildOfClass("BillboardGui") or char:FindFirstChild("NameTag") or char:FindFirstChild("HumanoidRootPart"):FindFirstChildOfClass("BillboardGui")
+    local character = player.Character
+    if character then
+        -- 1. YÖNTEM: Karakter içindeki herhangi bir GUI objesini tara
+        local tag = character:FindFirstChildOfClass("BillboardGui") or 
+                    character:FindFirstChild("PlayerDisplay") or 
+                    character:FindFirstChild("NameTag")
         
-        -- Eğer kafasında bir etiket VARSA, o senin takımıdır.
-        -- Eğer etiket YOKSA, o rakiptir.
-        if hasTag then
-            return false -- Takım arkadaşı
-        else
-            return true -- Rakip
+        -- 2. YÖNTEM: Kafasındaki TextLabel'ı kontrol et (Görüntüdeki sses550 yazısı gibi)
+        local head = character:FindFirstChild("Head")
+        if head then
+            local headTag = head:FindFirstChildOfClass("BillboardGui")
+            if headTag then return false end -- İsim etiketi varsa takımdır
+        end
+
+        -- 3. YÖNTEM: Roblox Standart Takım Kontrolü (Hala ihtimal dahilinde)
+        if player.Team ~= nil and player.Team == LocalPlayer.Team then
+            return false
+        end
+
+        -- 4. YÖNTEM: Eğer hiçbir etiket yoksa RAKİPTİR
+        if not tag then
+            return true
         end
     end
     return false
@@ -89,33 +90,30 @@ RunService.RenderStepped:Connect(function()
         if player ~= LocalPlayer then
             if not espCache[player] then
                 espCache[player] = {
-                    Highlight = Instance.new("Highlight"),
+                    Highlight = Instance.new("Highlight", game.CoreGui),
                     Line = Drawing.new("Line")
                 }
-                espCache[player].Highlight.FillColor = _G.SafeCheatConfig.BoxColor
-                espCache[player].Highlight.Parent = game.CoreGui
-                espCache[player].Line.Thickness = 1.5
-                espCache[player].Line.Color = _G.SafeCheatConfig.TraceColor
+                espCache[player].Line.Thickness = 1
+                espCache[player].Line.Color = Color3.fromRGB(255, 255, 255)
             end
 
             local objects = espCache[player]
-            local character = player.Character
+            local char = player.Character
             
-            if character and character:FindFirstChild("HumanoidRootPart") and character:FindFirstChild("Humanoid") and character.Humanoid.Health > 0 then
-                local rootPos = character.HumanoidRootPart.Position
-                local screenPos, onScreen = Camera:WorldToViewportPoint(rootPos)
-                
-                local enemy = IsEnemy(player) -- Yeni kontrol
+            if char and char:FindFirstChild("HumanoidRootPart") and char:FindFirstChild("Humanoid") and char.Humanoid.Health > 0 then
+                local enemy = IsEnemy(player)
+                local screenPos, onScreen = Camera:WorldToViewportPoint(char.HumanoidRootPart.Position)
 
-                -- ESP Sadece Rakiplere
+                -- ESP Uygula (SADECE RAKİPLERE)
                 if _G.SafeCheatConfig.ESP and enemy then
-                    objects.Highlight.Adornee = character
+                    objects.Highlight.Adornee = char
                     objects.Highlight.Enabled = true
+                    objects.Highlight.FillColor = _G.SafeCheatConfig.BoxColor
                 else
                     objects.Highlight.Enabled = false
                 end
 
-                -- Çizgi Sadece Rakiplere
+                -- Traces Uygula (SADECE RAKİPLERE VE EKRANDAYSA)
                 if _G.SafeCheatConfig.Traces and onScreen and enemy then
                     objects.Line.From = Vector2.new(Camera.ViewportSize.X / 2, Camera.ViewportSize.Y)
                     objects.Line.To = Vector2.new(screenPos.X, screenPos.Y)
@@ -130,5 +128,3 @@ RunService.RenderStepped:Connect(function()
         end
     end
 end)
-
-print("Safe Cheat V2.2: İsim Etiketi Tabanlı Team Check Yüklendi!")
