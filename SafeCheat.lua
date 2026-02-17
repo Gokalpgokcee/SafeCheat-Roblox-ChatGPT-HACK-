@@ -1,4 +1,5 @@
-    local RunService = game:GetService("RunService")
+local TweenService = game:GetService("TweenService")
+local RunService = game:GetService("RunService")
 local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
 local Camera = workspace.CurrentCamera
@@ -8,137 +9,164 @@ _G.SafeCheatConfig = {
     ESP = false,
     Traces = false,
     RGB_Mode = false,
-    NoRecoil = false,
-    BoxColor = Color3.fromRGB(0, 255, 255),
-    TraceColor = Color3.fromRGB(255, 255, 255)
+    Fullbright = false,
+    Key = "SafecheatGökalp"
 }
 
--- [MODERN GUI TASARIMI]
+-- [GUI ANA YAPI]
 local ScreenGui = Instance.new("ScreenGui", game.CoreGui)
+ScreenGui.Name = "SafeCheat_Collaborative"
+
+-- [KEY SİSTEMİ PANELİ]
+local KeyFrame = Instance.new("Frame", ScreenGui)
+KeyFrame.Size = UDim2.new(0, 350, 0, 200)
+KeyFrame.Position = UDim2.new(0.5, -175, 0.5, -100)
+KeyFrame.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
+KeyFrame.BorderSizePixel = 0
+local KeyCorner = Instance.new("UICorner", KeyFrame)
+local KeyStroke = Instance.new("UIStroke", KeyFrame)
+KeyStroke.Color = Color3.fromRGB(0, 255, 255)
+KeyStroke.Thickness = 2
+
+local Credits = Instance.new("TextLabel", KeyFrame)
+Credits.Size = UDim2.new(1, 0, 0, 30)
+Credits.Position = UDim2.new(0, 0, 0, 10)
+Credits.Text = "CREATED BY GÖKALP & GEMINI"
+Credits.TextColor3 = Color3.fromRGB(0, 255, 255)
+Credits.Font = Enum.Font.GothamBold
+Credits.TextSize = 14
+Credits.BackgroundTransparency = 1
+
+local KeyTitle = Instance.new("TextLabel", KeyFrame)
+KeyTitle.Size = UDim2.new(1, 0, 0, 40)
+KeyTitle.Position = UDim2.new(0, 0, 0, 40)
+KeyTitle.Text = "ACCESS PANEL"
+KeyTitle.TextColor3 = Color3.fromRGB(255, 255, 255)
+KeyTitle.Font = Enum.Font.GothamBold
+KeyTitle.TextSize = 22
+KeyTitle.BackgroundTransparency = 1
+
+local KeyInput = Instance.new("TextBox", KeyFrame)
+KeyInput.Size = UDim2.new(0, 250, 0, 40)
+KeyInput.Position = UDim2.new(0.5, -125, 0.5, 0)
+KeyInput.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+KeyInput.Text = ""
+KeyInput.PlaceholderText = "Enter Security Key..."
+KeyInput.TextColor3 = Color3.fromRGB(255, 255, 255)
+Instance.new("UICorner", KeyInput)
+
+local KeyBtn = Instance.new("TextButton", KeyFrame)
+KeyBtn.Size = UDim2.new(0, 120, 0, 35)
+KeyBtn.Position = UDim2.new(0.5, -60, 0.75, 5)
+KeyBtn.BackgroundColor3 = Color3.fromRGB(0, 255, 255)
+KeyBtn.Text = "AUTHENTICATE"
+KeyBtn.TextColor3 = Color3.fromRGB(0, 0, 0)
+KeyBtn.Font = Enum.Font.GothamBold
+Instance.new("UICorner", KeyBtn)
+
+-- [ANA MENÜ PANELİ]
 local MainFrame = Instance.new("Frame", ScreenGui)
-MainFrame.Size = UDim2.new(0, 340, 0, 380)
-MainFrame.Position = UDim2.new(0.5, -170, 0.5, -190)
-MainFrame.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
+MainFrame.Size = UDim2.new(0, 400, 0, 300)
+MainFrame.Position = UDim2.new(0.5, -200, 1.2, 0) -- Başta ekranın altında gizli
+MainFrame.BackgroundColor3 = Color3.fromRGB(10, 10, 10)
 MainFrame.Visible = false
-MainFrame.Active = true
-MainFrame.Draggable = true
-Instance.new("UICorner", MainFrame).CornerRadius = UDim.new(0, 10)
+Instance.new("UICorner", MainFrame)
+local MainStroke = Instance.new("UIStroke", MainFrame)
+MainStroke.Color = Color3.fromRGB(0, 255, 255)
+MainStroke.Thickness = 2
 
--- Neon Kenarlık
-local UIStroke = Instance.new("UIStroke", MainFrame)
-UIStroke.Thickness = 2
-UIStroke.Color = Color3.fromRGB(0, 255, 255)
+-- Sol Sekme Kısmı
+local TabSide = Instance.new("Frame", MainFrame)
+TabSide.Size = UDim2.new(0, 110, 1, 0)
+TabSide.BackgroundColor3 = Color3.fromRGB(18, 18, 18)
+Instance.new("UICorner", TabSide)
 
--- RGB Menü Kenarlığı Döngüsü
-RunService.RenderStepped:Connect(function()
-    if _G.SafeCheatConfig.RGB_Mode then
-        local hue = tick() % 5 / 5
-        UIStroke.Color = Color3.fromHSV(hue, 1, 1)
-    else
-        UIStroke.Color = Color3.fromRGB(0, 255, 255)
-    end
-end)
+local Container = Instance.new("ScrollingFrame", MainFrame)
+Container.Size = UDim2.new(1, -130, 1, -20)
+Container.Position = UDim2.new(0, 120, 0, 10)
+Container.BackgroundTransparency = 1
+Container.ScrollBarThickness = 2
 
-local Title = Instance.new("TextLabel", MainFrame)
-Title.Size = UDim2.new(1, 0, 0, 60)
-Title.Text = "SAFE CHEAT V3.0"
-Title.TextColor3 = Color3.fromRGB(255, 255, 255)
-Title.Font = Enum.Font.GothamBold
-Title.TextSize = 22
-Title.BackgroundTransparency = 1
+local UIList = Instance.new("UIListLayout", Container)
+UIList.Padding = UDim.new(0, 8)
 
--- AÇMA KAPAMA BUTONU
-local ToggleBtn = Instance.new("TextButton", ScreenGui)
-ToggleBtn.Size = UDim2.new(0, 50, 0, 50)
-ToggleBtn.Position = UDim2.new(0, 15, 0.5, 0)
-ToggleBtn.Text = "SC"
-ToggleBtn.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
-ToggleBtn.TextColor3 = Color3.fromRGB(0, 255, 255)
-Instance.new("UICorner", ToggleBtn).CornerRadius = UDim.new(1, 0)
-ToggleBtn.MouseButton1Click:Connect(function() MainFrame.Visible = not MainFrame.Visible end)
-
-local function CreateButton(name, pos, configName)
-    local btn = Instance.new("TextButton", MainFrame)
-    btn.Size = UDim2.new(0, 280, 0, 45)
-    btn.Position = pos
+-- [BUTON OLUŞTURUCU]
+local function AddToggle(name, configName)
+    local btn = Instance.new("TextButton", Container)
+    btn.Size = UDim2.new(1, -5, 0, 40)
     btn.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
     btn.Text = name
-    btn.TextColor3 = Color3.fromRGB(200, 200, 200)
+    btn.TextColor3 = Color3.fromRGB(150, 150, 150)
     btn.Font = Enum.Font.GothamSemibold
     Instance.new("UICorner", btn)
-    
-    local stroke = Instance.new("UIStroke", btn)
-    stroke.Color = Color3.fromRGB(40, 40, 40)
+    local s = Instance.new("UIStroke", btn)
+    s.Color = Color3.fromRGB(45, 45, 45)
 
     btn.MouseButton1Click:Connect(function()
         _G.SafeCheatConfig[configName] = not _G.SafeCheatConfig[configName]
-        btn.TextColor3 = _G.SafeCheatConfig[configName] and Color3.fromRGB(0, 255, 255) or Color3.fromRGB(200, 200, 200)
-        stroke.Color = _G.SafeCheatConfig[configName] and Color3.fromRGB(0, 255, 255) or Color3.fromRGB(40, 40, 40)
+        local active = _G.SafeCheatConfig[configName]
+        TweenService:Create(btn, TweenInfo.new(0.3), {TextColor3 = active and Color3.fromRGB(0, 255, 255) or Color3.fromRGB(150, 150, 150)}):Play()
+        TweenService:Create(s, TweenInfo.new(0.3), {Color = active and Color3.fromRGB(0, 255, 255) or Color3.fromRGB(45, 45, 45)}):Play()
     end)
 end
 
-CreateButton("ESP (Visuals)", UDim2.new(0.09, 0, 0.2, 0), "ESP")
-CreateButton("Traces (Lines)", UDim2.new(0.09, 0, 0.35, 0), "Traces")
-CreateButton("RGB Mode (Gökkuşağı)", UDim2.new(0.09, 0, 0.5, 0), "RGB_Mode")
-CreateButton("No Recoil (Pro)", UDim2.new(0.09, 0, 0.65, 0), "NoRecoil")
+AddToggle("Visual ESP", "ESP")
+AddToggle("Distance Traces", "Traces")
+AddToggle("Neon RGB Mode", "RGB_Mode")
+AddToggle("Lighting: Fullbright", "Fullbright")
 
---- [GELİŞMİŞ GÖRSEL VE RECOIL SİSTEMİ] ---
-local espCache = {}
-
-local function CreateESP(p)
-    local h = Instance.new("Highlight", game.CoreGui)
-    h.Enabled = false
-    local l = Drawing.new("Line")
-    l.Visible = false
-    espCache[p] = {Highlight = h, Line = l}
-end
-
-Players.PlayerAdded:Connect(CreateESP)
-for _, p in pairs(Players:GetPlayers()) do if p ~= LocalPlayer then CreateESP(p) end end
-
-RunService.RenderStepped:Connect(function()
-    local hue = tick() % 5 / 5
-    local color = Color3.fromHSV(hue, 1, 1)
-
-    for p, obj in pairs(espCache) do
-        if p.Character and p.Character:FindFirstChild("HumanoidRootPart") and p.Character.Humanoid.Health > 0 then
-            local root = p.Character.HumanoidRootPart
-            local pos, onScreen = Camera:WorldToViewportPoint(root.Position)
-            
-            -- ESP Güncelleme
-            if _G.SafeCheatConfig.ESP then
-                obj.Highlight.Adornee = p.Character
-                obj.Highlight.Enabled = true
-                obj.Highlight.FillColor = _G.SafeCheatConfig.RGB_Mode and color or _G.SafeCheatConfig.BoxColor
-            else
-                obj.Highlight.Enabled = false
-            end
-
-            -- Traces Güncelleme
-            if _G.SafeCheatConfig.Traces and onScreen then
-                obj.Line.From = Vector2.new(Camera.ViewportSize.X / 2, Camera.ViewportSize.Y)
-                obj.Line.To = Vector2.new(pos.X, pos.Y)
-                obj.Line.Color = _G.SafeCheatConfig.RGB_Mode and color or _G.SafeCheatConfig.TraceColor
-                obj.Line.Visible = true
-            else
-                obj.Line.Visible = false
-            end
-        else
-            obj.Highlight.Enabled = false
-            obj.Line.Visible = false
-        end
+-- [KEY LOGIC & ANIMATIONS]
+KeyBtn.MouseButton1Click:Connect(function()
+    if KeyInput.Text == _G.SafeCheatConfig.Key then
+        -- Key ekranını salla ve yok et
+        local tweenOut = TweenService:Create(KeyFrame, TweenInfo.new(0.5, Enum.EasingStyle.Back, Enum.EasingDirection.In), {Position = UDim2.new(0.5, -175, -0.5, 0), BackgroundTransparency = 1})
+        tweenOut:Play()
+        tweenOut.Completed:Connect(function()
+            KeyFrame:Destroy()
+            MainFrame.Visible = true
+            MainFrame:TweenPosition(UDim2.new(0.5, -200, 0.5, -150), "Out", "Quart", 0.6, true)
+        end)
+    else
+        KeyInput.Text = ""
+        KeyInput.PlaceholderText = "ACCESS DENIED!"
+        KeyStroke.Color = Color3.fromRGB(255, 0, 0)
+        task.wait(1)
+        KeyStroke.Color = Color3.fromRGB(0, 255, 255)
     end
+end)
 
-    -- [PRO NO RECOIL]
-    if _G.SafeCheatConfig.NoRecoil then
-        -- Silah ateşlendiğinde kameranın sarsılmasını anlık olarak nötralize eder
-        local oldCFrame = Camera.CFrame
-        RunService.RenderStepped:Wait()
-        if _G.SafeCheatConfig.NoRecoil then
-            -- Kamerayı bir önceki pozisyona hafifçe zorlayarak sekme etkisini azaltır
-            Camera.CFrame = Camera.CFrame:Lerp(oldCFrame, 0.1) 
+-- [RENDERING]
+local espCache = {}
+RunService.RenderStepped:Connect(function()
+    local color = Color3.fromHSV(tick() % 5 / 5, 1, 1)
+    if _G.SafeCheatConfig.RGB_Mode then MainStroke.Color = color KeyStroke.Color = color end
+    if _G.SafeCheatConfig.Fullbright then game:GetService("Lighting").Brightness = 2 game:GetService("Lighting").ClockTime = 14 end
+
+    for _, p in pairs(Players:GetPlayers()) do
+        if p ~= LocalPlayer and p.Character and p.Character:FindFirstChild("HumanoidRootPart") then
+            if not espCache[p] then
+                espCache[p] = {H = Instance.new("Highlight", game.CoreGui), L = Drawing.new("Line")}
+            end
+            local char = p.Character
+            local root = char.HumanoidRootPart
+            local pos, onScreen = Camera:WorldToViewportPoint(root.Position)
+            local dist = (LocalPlayer.Character.HumanoidRootPart.Position - root.Position).Magnitude
+            local dColor = (dist < 50 and Color3.new(1,0,0) or (dist < 150 and Color3.new(1,0.5,0) or Color3.new(0,1,0)))
+
+            espCache[p].H.Enabled = _G.SafeCheatConfig.ESP
+            espCache[p].H.Adornee = char
+            espCache[p].H.FillColor = _G.SafeCheatConfig.RGB_Mode and color or dColor
+
+            if _G.SafeCheatConfig.Traces and onScreen then
+                espCache[p].L.Visible = true
+                espCache[p].L.From = Vector2.new(Camera.ViewportSize.X/2, Camera.ViewportSize.Y)
+                espCache[p].L.To = Vector2.new(pos.X, pos.Y)
+                espCache[p].L.Color = espCache[p].H.FillColor
+            else
+                espCache[p].L.Visible = false
+            end
         end
     end
 end)
 
-print("Safe Cheat V3.0: RGB & No Recoil Sürümü Aktif!")
+print("Safe Cheat V4.1: Collaborative Version by Gokalp & Gemini Loaded!")
