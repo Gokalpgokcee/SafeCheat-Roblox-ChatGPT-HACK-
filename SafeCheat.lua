@@ -1,144 +1,144 @@
-local RunService = game:GetService("RunService")
+    local RunService = game:GetService("RunService")
 local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
 local Camera = workspace.CurrentCamera
-local Mouse = LocalPlayer:GetMouse()
 
--- AYARLAR (LEGIT AYARLARI)
+-- AYARLAR
 _G.SafeCheatConfig = {
     ESP = false,
     Traces = false,
-    TeamCheck = true,
-    Aimbot = false,
-    AimSmoothness = 0.15, -- Ne kadar yüksekse o kadar yavaş ve belli etmeden kayar (0.1 - 0.5 ideal)
+    RGB_Mode = false,
     NoRecoil = false,
-    TriggerBot = false
+    BoxColor = Color3.fromRGB(0, 255, 255),
+    TraceColor = Color3.fromRGB(255, 255, 255)
 }
 
--- [GUI OLUŞTURMA]
+-- [MODERN GUI TASARIMI]
 local ScreenGui = Instance.new("ScreenGui", game.CoreGui)
-local ToggleButton = Instance.new("TextButton", ScreenGui)
-ToggleButton.Size = UDim2.new(0, 45, 0, 45)
-ToggleButton.Position = UDim2.new(0, 10, 0.5, 0)
-ToggleButton.Text = "SC"
-ToggleButton.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
-ToggleButton.TextColor3 = Color3.fromRGB(0, 255, 255)
-Instance.new("UICorner", ToggleButton).CornerRadius = UDim.new(1, 0)
-
 local MainFrame = Instance.new("Frame", ScreenGui)
-MainFrame.Size = UDim2.new(0, 300, 0, 320)
-MainFrame.Position = UDim2.new(0.5, -150, 0.5, -160)
-MainFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+MainFrame.Size = UDim2.new(0, 340, 0, 380)
+MainFrame.Position = UDim2.new(0.5, -170, 0.5, -190)
+MainFrame.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
 MainFrame.Visible = false
 MainFrame.Active = true
 MainFrame.Draggable = true
-Instance.new("UICorner", MainFrame)
+Instance.new("UICorner", MainFrame).CornerRadius = UDim.new(0, 10)
 
-ToggleButton.MouseButton1Click:Connect(function() MainFrame.Visible = not MainFrame.Visible end)
+-- Neon Kenarlık
+local UIStroke = Instance.new("UIStroke", MainFrame)
+UIStroke.Thickness = 2
+UIStroke.Color = Color3.fromRGB(0, 255, 255)
 
-local function CreateToggle(name, pos, configName)
+-- RGB Menü Kenarlığı Döngüsü
+RunService.RenderStepped:Connect(function()
+    if _G.SafeCheatConfig.RGB_Mode then
+        local hue = tick() % 5 / 5
+        UIStroke.Color = Color3.fromHSV(hue, 1, 1)
+    else
+        UIStroke.Color = Color3.fromRGB(0, 255, 255)
+    end
+end)
+
+local Title = Instance.new("TextLabel", MainFrame)
+Title.Size = UDim2.new(1, 0, 0, 60)
+Title.Text = "SAFE CHEAT V3.0"
+Title.TextColor3 = Color3.fromRGB(255, 255, 255)
+Title.Font = Enum.Font.GothamBold
+Title.TextSize = 22
+Title.BackgroundTransparency = 1
+
+-- AÇMA KAPAMA BUTONU
+local ToggleBtn = Instance.new("TextButton", ScreenGui)
+ToggleBtn.Size = UDim2.new(0, 50, 0, 50)
+ToggleBtn.Position = UDim2.new(0, 15, 0.5, 0)
+ToggleBtn.Text = "SC"
+ToggleBtn.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+ToggleBtn.TextColor3 = Color3.fromRGB(0, 255, 255)
+Instance.new("UICorner", ToggleBtn).CornerRadius = UDim.new(1, 0)
+ToggleBtn.MouseButton1Click:Connect(function() MainFrame.Visible = not MainFrame.Visible end)
+
+local function CreateButton(name, pos, configName)
     local btn = Instance.new("TextButton", MainFrame)
-    btn.Size = UDim2.new(0, 260, 0, 35)
+    btn.Size = UDim2.new(0, 280, 0, 45)
     btn.Position = pos
-    btn.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
-    btn.Text = name .. ": KAPALI"
-    btn.TextColor3 = Color3.fromRGB(255, 0, 0)
-    btn.Font = Enum.Font.Gotham
+    btn.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+    btn.Text = name
+    btn.TextColor3 = Color3.fromRGB(200, 200, 200)
+    btn.Font = Enum.Font.GothamSemibold
     Instance.new("UICorner", btn)
+    
+    local stroke = Instance.new("UIStroke", btn)
+    stroke.Color = Color3.fromRGB(40, 40, 40)
 
     btn.MouseButton1Click:Connect(function()
         _G.SafeCheatConfig[configName] = not _G.SafeCheatConfig[configName]
-        btn.Text = name .. ": " .. (_G.SafeCheatConfig[configName] and "AÇIK" or "KAPALI")
-        btn.TextColor3 = _G.SafeCheatConfig[configName] and Color3.fromRGB(0, 255, 0) or Color3.fromRGB(255, 0, 0)
+        btn.TextColor3 = _G.SafeCheatConfig[configName] and Color3.fromRGB(0, 255, 255) or Color3.fromRGB(200, 200, 200)
+        stroke.Color = _G.SafeCheatConfig[configName] and Color3.fromRGB(0, 255, 255) or Color3.fromRGB(40, 40, 40)
     end)
 end
 
-CreateToggle("ESP (Visual)", UDim2.new(0.06, 0, 0.15, 0), "ESP")
-CreateToggle("Traces (Lines)", UDim2.new(0.06, 0, 0.30, 0), "Traces")
-CreateToggle("Legit Aimbot", UDim2.new(0.06, 0, 0.45, 0), "Aimbot")
-CreateToggle("Trigger Bot (Oto Ates)", UDim2.new(0.06, 0, 0.60, 0), "TriggerBot")
-CreateToggle("No Recoil (Sarsinti Yok)", UDim2.new(0.06, 0, 0.75, 0), "NoRecoil")
+CreateButton("ESP (Visuals)", UDim2.new(0.09, 0, 0.2, 0), "ESP")
+CreateButton("Traces (Lines)", UDim2.new(0.09, 0, 0.35, 0), "Traces")
+CreateButton("RGB Mode (Gökkuşağı)", UDim2.new(0.09, 0, 0.5, 0), "RGB_Mode")
+CreateButton("No Recoil (Pro)", UDim2.new(0.09, 0, 0.65, 0), "NoRecoil")
 
--- TEAM CHECK FONKSİYONU
-local function IsEnemy(player)
-    if not _G.SafeCheatConfig.TeamCheck then return true end
-    local char = player.Character
-    if char then
-        local tag = char:FindFirstChildOfClass("BillboardGui") or char:FindFirstChild("NameTag") or char:FindFirstChild("Head"):FindFirstChildOfClass("BillboardGui")
-        return tag == nil
-    end
-    return false
-end
-
--- ESP CACHE
+--- [GELİŞMİŞ GÖRSEL VE RECOIL SİSTEMİ] ---
 local espCache = {}
 
--- ANA DÖNGÜ (LEGIT ÖZELLİKLER)
+local function CreateESP(p)
+    local h = Instance.new("Highlight", game.CoreGui)
+    h.Enabled = false
+    local l = Drawing.new("Line")
+    l.Visible = false
+    espCache[p] = {Highlight = h, Line = l}
+end
+
+Players.PlayerAdded:Connect(CreateESP)
+for _, p in pairs(Players:GetPlayers()) do if p ~= LocalPlayer then CreateESP(p) end end
+
 RunService.RenderStepped:Connect(function()
-    local closestPlayer = nil
-    local shortestDistance = math.huge
+    local hue = tick() % 5 / 5
+    local color = Color3.fromHSV(hue, 1, 1)
 
-    for _, player in pairs(Players:GetPlayers()) do
-        if player ~= LocalPlayer then
-            if not espCache[player] then
-                espCache[player] = {Highlight = Instance.new("Highlight", game.CoreGui), Line = Drawing.new("Line")}
-                espCache[player].Line.Thickness = 1
-            end
-
-            local char = player.Character
-            if char and char:FindFirstChild("HumanoidRootPart") and char.Humanoid.Health > 0 then
-                local enemy = IsEnemy(player)
-                local screenPos, onScreen = Camera:WorldToViewportPoint(char.HumanoidRootPart.Position)
-
-                -- ESP & TRACES
-                espCache[player].Highlight.Enabled = _G.SafeCheatConfig.ESP and enemy
-                espCache[player].Highlight.Adornee = char
-                
-                if _G.SafeCheatConfig.Traces and onScreen and enemy then
-                    espCache[player].Line.From = Vector2.new(Camera.ViewportSize.X / 2, Camera.ViewportSize.Y)
-                    espCache[player].Line.To = Vector2.new(screenPos.X, screenPos.Y)
-                    espCache[player].Line.Visible = true
-                else
-                    espCache[player].Line.Visible = false
-                end
-
-                -- AIMBOT İÇİN EN YAKIN DÜŞMANI BUL
-                if enemy and onScreen then
-                    local mouseDist = (Vector2.new(screenPos.X, screenPos.Y) - Vector2.new(Mouse.X, Mouse.Y)).Magnitude
-                    if mouseDist < shortestDistance and mouseDist < 300 then -- 300 FOV sınırı
-                        closestPlayer = char
-                        shortestDistance = mouseDist
-                    end
-                end
+    for p, obj in pairs(espCache) do
+        if p.Character and p.Character:FindFirstChild("HumanoidRootPart") and p.Character.Humanoid.Health > 0 then
+            local root = p.Character.HumanoidRootPart
+            local pos, onScreen = Camera:WorldToViewportPoint(root.Position)
+            
+            -- ESP Güncelleme
+            if _G.SafeCheatConfig.ESP then
+                obj.Highlight.Adornee = p.Character
+                obj.Highlight.Enabled = true
+                obj.Highlight.FillColor = _G.SafeCheatConfig.RGB_Mode and color or _G.SafeCheatConfig.BoxColor
             else
-                espCache[player].Highlight.Enabled = false
-                espCache[player].Line.Visible = false
+                obj.Highlight.Enabled = false
             end
+
+            -- Traces Güncelleme
+            if _G.SafeCheatConfig.Traces and onScreen then
+                obj.Line.From = Vector2.new(Camera.ViewportSize.X / 2, Camera.ViewportSize.Y)
+                obj.Line.To = Vector2.new(pos.X, pos.Y)
+                obj.Line.Color = _G.SafeCheatConfig.RGB_Mode and color or _G.SafeCheatConfig.TraceColor
+                obj.Line.Visible = true
+            else
+                obj.Line.Visible = false
+            end
+        else
+            obj.Highlight.Enabled = false
+            obj.Line.Visible = false
         end
     end
 
-    -- LEGIT AIMBOT UYGULAMA
-    if _G.SafeCheatConfig.Aimbot and closestPlayer then
-        local aimPos = closestPlayer.HumanoidRootPart.Position
-        local targetCFrame = CFrame.new(Camera.CFrame.Position, aimPos)
-        Camera.CFrame = Camera.CFrame:Lerp(targetCFrame, _G.SafeCheatConfig.AimSmoothness)
-    end
-
-    -- TRIGGER BOT
-    if _G.SafeCheatConfig.TriggerBot and Mouse.Target then
-        local targetChar = Mouse.Target.Parent
-        if targetChar:FindFirstChild("Humanoid") and IsEnemy(Players:GetPlayerFromCharacter(targetChar)) then
-            mouse1click() -- Bu fonksiyon Delta'da çalışır
+    -- [PRO NO RECOIL]
+    if _G.SafeCheatConfig.NoRecoil then
+        -- Silah ateşlendiğinde kameranın sarsılmasını anlık olarak nötralize eder
+        local oldCFrame = Camera.CFrame
+        RunService.RenderStepped:Wait()
+        if _G.SafeCheatConfig.NoRecoil then
+            -- Kamerayı bir önceki pozisyona hafifçe zorlayarak sekme etkisini azaltır
+            Camera.CFrame = Camera.CFrame:Lerp(oldCFrame, 0.1) 
         end
     end
 end)
 
--- NO RECOIL (Basit Mantık)
-if _G.SafeCheatConfig.NoRecoil then
-    RunService.RenderStepped:Connect(function()
-        if _G.SafeCheatConfig.NoRecoil then
-            LocalPlayer.CameraMaxZoomDistance = 100 -- Bazı oyunlarda recoil'i etkileyen kamera değişkenlerini sabitler
-            -- Not: Defusal özel recoil sistemi script bazlıysa burası oyun özelinde güncellenmelidir.
-        end
-    end)
-end
+print("Safe Cheat V3.0: RGB & No Recoil Sürümü Aktif!")
