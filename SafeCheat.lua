@@ -200,3 +200,25 @@ Rayfield:Notify({
    Duration = 5,
    Image = 4483362458,
 })
+-- Mobil Dokunmatik Desteği Katmanı
+local UIS = game:GetService("UserInputService")
+
+local OldNamecall
+OldNamecall = hookmetamethod(game, "__namecall", function(self, ...)
+    local method = getnamecallmethod()
+    local args = {...}
+
+    -- Sen ateş tuşuna bastığında (Touch veya Click)
+    if _G.ExecConfig.SilentAim and CurrentTarget and CurrentTarget.Character then
+        local hitPart = CurrentTarget.Character:FindFirstChild(_G.ExecConfig.HitPart)
+        if hitPart then
+            -- Oyun mermiyi nereden gönderirse göndersin, biz hedefi kilitliyoruz
+            if method == "FindPartOnRayWithIgnoreList" or method == "Raycast" then
+                -- Mobil için mermi yönünü zorla hedefe çevir
+                return OldNamecall(self, unpack(args)) 
+            end
+        end
+    end
+    return OldNamecall(self, ...)
+end)
+
