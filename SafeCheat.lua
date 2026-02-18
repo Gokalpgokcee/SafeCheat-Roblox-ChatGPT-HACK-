@@ -1,5 +1,5 @@
--- [[ G&G V16.2 - UNIVERSAL SILENT AIM FIX ]] --
--- Delta & Mobile Optimized | Metamethod + Mouse Hooking
+-- [[ G&G V16.3 - MOBILE TOUCH-FORCE EDITION ]] --
+-- Delta & Mobile Optimized | Direct Touch Manipulation
 
 local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
 
@@ -8,7 +8,7 @@ _G.ExecConfig = {
     Aimbot = false,
     Prediction = false,
     PredValue = 0.165,
-    FOV = 150,
+    FOV = 200, -- Mobilde FOV'u biraz daha geniş tutmak iyidir
     HitPart = "Head",
     WallCheck = true,
     TeamCheck = true,
@@ -17,8 +17,8 @@ _G.ExecConfig = {
 }
 
 local Window = Rayfield:CreateWindow({
-   Name = "G&G V16.2 | SILENT AIM FIX",
-   LoadingTitle = "Silent Aim Sistemleri Onarılıyor...",
+   Name = "G&G V16.3 | MOBILE TOUCH FIX",
+   LoadingTitle = "Dokunmatik Sistemler Manipüle Ediliyor...",
    LoadingSubtitle = "Hazırlayan: Gökalp",
    ConfigurationSaving = { Enabled = false },
    KeySystem = false 
@@ -28,8 +28,7 @@ local CombatTab = Window:CreateTab("OP Combat ☠️", 4483362458)
 local VisualsTab = Window:CreateTab("God ESP 👁️", 4483345998)
 
 CombatTab:CreateToggle({ Name = "🔥 OP Silent Aim", CurrentValue = false, Callback = function(Value) _G.ExecConfig.SilentAim = Value end })
-CombatTab:CreateToggle({ Name = "🎯 Aimbot (Kamera)", CurrentValue = false, Callback = function(Value) _G.ExecConfig.Aimbot = Value end })
-CombatTab:CreateSlider({ Name = "Görüş Alanı (FOV)", Range = {10, 800}, Increment = 10, CurrentValue = 150, Callback = function(Value) _G.ExecConfig.FOV = Value end })
+CombatTab:CreateSlider({ Name = "Görüş Alanı (FOV)", Range = {10, 800}, Increment = 10, CurrentValue = 200, Callback = function(Value) _G.ExecConfig.FOV = Value end })
 
 VisualsTab:CreateToggle({ Name = "Box ESP", CurrentValue = false, Callback = function(Value) _G.ExecConfig.ESP_Boxes = Value end })
 VisualsTab:CreateToggle({ Name = "Chams ESP", CurrentValue = false, Callback = function(Value) _G.ExecConfig.Chams = Value end })
@@ -37,9 +36,9 @@ VisualsTab:CreateToggle({ Name = "Chams ESP", CurrentValue = false, Callback = f
 -- [ TEMEL DEĞİŞKENLER ]
 local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
-local Mouse = LocalPlayer:GetMouse()
 local Camera = workspace.CurrentCamera
 local RunService = game:GetService("RunService")
+local UserInputService = game:GetService("UserInputService")
 
 -- Hedef Bulucu
 local function GetTarget()
@@ -67,55 +66,37 @@ end
 
 local CurrentTarget = nil
 
--- [ ☠️ YENİ NESİL SILENT AIM SİSTEMİ ☠️ ]
+-- [ ☠️ MOBİL DOKUNMATİK MANİPÜLASYONU ☠️ ]
 
--- 1. KATMAN: __index Hooking (Mouse.Hit ve Mouse.Target Manipülasyonu)
--- Birçok oyun mermiyi farenin ucuna göre atar. Fareyi değil, farenin "değerini" kandırıyoruz.
-local OldIndex
-OldIndex = hookmetamethod(game, "__index", function(self, index)
-    if not checkcaller() and _G.ExecConfig.SilentAim and self == Mouse and (index == "Hit" or index == "Target") then
+local OldNamecall
+OldNamecall = hookmetamethod(game, "__namecall", function(self, ...)
+    local method = getnamecallmethod()
+    local args = {...}
+
+    if not checkcaller() and _G.ExecConfig.SilentAim then
         CurrentTarget = GetTarget()
+        
         if CurrentTarget and CurrentTarget.Character and CurrentTarget.Character:FindFirstChild(_G.ExecConfig.HitPart) then
             local targetPart = CurrentTarget.Character[_G.ExecConfig.HitPart]
             local aimPos = targetPart.Position
             
-            if _G.ExecConfig.Prediction then
-                aimPos = aimPos + (CurrentTarget.Character.HumanoidRootPart.Velocity * _G.ExecConfig.PredValue)
-            end
-
-            if index == "Hit" then
-                return CFrame.new(aimPos)
-            elseif index == "Target" then
-                return targetPart
-            end
-        end
-    end
-    return OldIndex(self, index)
-end)
-
--- 2. KATMAN: __namecall Hooking (Raycast ve FindPartOnRay Manipülasyonu)
--- Daha profesyonel oyunlar (Arsenal vb.) Raycast kullanır.
-local OldNamecall
-OldNamecall = hookmetamethod(game, "__namecall", function(self, ...)
-    local args = {...}
-    local method = getnamecallmethod()
-
-    if not checkcaller() and _G.ExecConfig.SilentAim and (method == "Raycast" or method == "FindPartOnRayWithIgnoreList" or method == "FindPartOnRay") then
-        CurrentTarget = GetTarget()
-        if CurrentTarget and CurrentTarget.Character and CurrentTarget.Character:FindFirstChild(_G.ExecConfig.HitPart) then
-            local targetPart = CurrentTarget.Character[_G.ExecConfig.HitPart]
-            local aimPos = targetPart.Position
-
-            if _G.ExecConfig.Prediction then
-                aimPos = aimPos + (CurrentTarget.Character.HumanoidRootPart.Velocity * _G.ExecConfig.PredValue)
-            end
-
-            if method == "Raycast" then
-                -- args[1] Origin, args[2] Direction
-                args[2] = (aimPos - args[1]).Unit * 1000
-                return OldNamecall(self, unpack(args))
-            elseif method == "FindPartOnRayWithIgnoreList" or method == "FindPartOnRay" then
-                args[1] = Ray.new(Camera.CFrame.Position, (aimPos - Camera.CFrame.Position).Unit * 1000)
+            -- Mobil mermi ve dokunmatik vuruş metodlarını yakalıyoruz
+            if method == "Raycast" or method == "FindPartOnRayWithIgnoreList" or method == "FireServer" then
+                -- Eğer oyun bir mermi veya hasar "RemoteEvent" (FireServer) kullanıyorsa
+                -- Bazı oyunlar direkt pozisyonu bu yolla gönderir.
+                for i, arg in pairs(args) do
+                    if typeof(arg) == "Vector3" then
+                        args[i] = aimPos -- Pozisyonu kafaya çevir
+                    elseif typeof(arg) == "CFrame" then
+                        args[i] = CFrame.new(aimPos) -- CFrame ise kafaya çevir
+                    end
+                end
+                
+                -- Raycast için yönü düzelt
+                if method == "Raycast" then
+                    args[2] = (aimPos - args[1]).Unit * 1000
+                end
+                
                 return OldNamecall(self, unpack(args))
             end
         end
@@ -123,23 +104,18 @@ OldNamecall = hookmetamethod(game, "__namecall", function(self, ...)
     return OldNamecall(self, ...)
 end)
 
--- Ana Döngü (Aimbot & ESP Update)
+-- [ GÖRSEL FOV DAİRESİ (EKRANA DOKUNUNCA GÖRMEN İÇİN) ]
+local FOVCircle = Drawing.new("Circle")
+FOVCircle.Thickness = 2
+FOVCircle.NumSides = 60
+FOVCircle.Radius = _G.ExecConfig.FOV
+FOVCircle.Filled = false
+FOVCircle.Color = Color3.fromRGB(0, 255, 255)
+FOVCircle.Transparency = 0.5
+
 RunService.RenderStepped:Connect(function()
+    FOVCircle.Visible = _G.ExecConfig.SilentAim
+    FOVCircle.Radius = _G.ExecConfig.FOV
+    FOVCircle.Position = Vector2.new(Camera.ViewportSize.X/2, Camera.ViewportSize.Y/2)
     CurrentTarget = GetTarget()
-    
-    if _G.ExecConfig.Aimbot and CurrentTarget and CurrentTarget.Character then
-        local targetPart = CurrentTarget.Character:FindFirstChild(_G.ExecConfig.HitPart)
-        if targetPart then
-            local aimPos = targetPart.Position
-            Camera.CFrame = Camera.CFrame:Lerp(CFrame.new(Camera.CFrame.Position, aimPos), 0.5)
-        end
-    end
 end)
-
--- ESP Kodlarını (V16.1'deki gibi) buraya ekleyebilirsin, onlar zaten CoreGui'de çalışıyor.
-
-Rayfield:Notify({
-   Title = "V16.2 SILENT AIM FIXED",
-   Content = "Metamethod + Mouse Hook aktif. Şimdi vurmayı dene!",
-   Duration = 5
-})
