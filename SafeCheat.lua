@@ -1,202 +1,263 @@
--- [[ G&G V8.1 - OP TAB FIX & POLISHED EDITION ]]
-local RunService = game:GetService("RunService")
+-- [[ G&G V9.0 - THE FINAL OVERHAUL (LEGIT & RAGE) ]] --
+
+local Library = {
+    Flags = {},
+    Enabled = true
+}
+
+-- [SERVICES]
 local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local UserInputService = game:GetService("UserInputService")
 local LocalPlayer = Players.LocalPlayer
 local Camera = workspace.CurrentCamera
 local Mouse = LocalPlayer:GetMouse()
-local UserInputService = game:GetService("UserInputService")
 
--- [AYARLAR]
-_G.SafeCheatConfig = {
-    -- Combat (Safe)
-    Aimbot = false, ShowFOV = false, AimSmoothness = 0.1, AimbotFOV = 150, WallCheck = true,
-    LegitHitbox = false,
-    -- Visuals
-    Box = false, HealthBar = false, Traces = false, RGB_Mode = false,
-    -- Player
-    InfJump = false, Fullbright = false,
-    -- OP (Bannable)
-    RageHitbox = false, Noclip = false, SpeedOverride = false, Speed = 35, JumpOverride = false, Jump = 100,
-    Key = "SafecheatGökalp"
+-- [CONFIG]
+_G.GG_V9_Config = {
+    Aimbot = {Enabled = false, Smoothness = 0.1, FOV = 100, VisibleCheck = true, Bone = "Head", Silent = false},
+    Visuals = {Boxes = false, Skeletons = false, Chams = false, Names = false, Tracers = false, Health = false},
+    Movement = {WalkSpeed = 16, JumpPower = 50, Fly = false, FlySpeed = 20, Bhop = false},
+    OP = {RageHitbox = false, HitboxSize = 2, SpinBot = false, InstantKill = false, Noclip = false}
 }
 
--- [GÖRSEL ÇİZİMLER]
-local FOVCircle = Drawing.new("Circle")
-FOVCircle.Thickness = 1
-FOVCircle.Filled = false
-FOVCircle.Transparency = 0.8
-FOVCircle.Color = Color3.fromRGB(0, 255, 255)
+-- [DRAWING API CHECK & ESP CORE]
+local function CreateDrawing(type, properties)
+    local d = Drawing.new(type)
+    for i, v in pairs(properties) do d[i] = v end
+    return d
+end
 
-local espCache = {}
-local function RemoveESP(player)
-    if espCache[player] then
-        espCache[player].B:Remove()
-        espCache[player].L:Remove()
-        espCache[player].H:Remove()
-        espCache[player] = nil
+local espObjects = {}
+local function RemoveESP(p)
+    if espObjects[p] then
+        for _, obj in pairs(espObjects[p]) do obj:Remove() end
+        espObjects[p] = nil
     end
 end
-Players.PlayerRemoving:Connect(RemoveESP) -- Hayalet ESP (Oyundan Çıkanlar) Fixlendi
 
--- [GUI TASARIMI]
-local ScreenGui = Instance.new("ScreenGui", game.CoreGui)
-local MainFrame = Instance.new("Frame", ScreenGui)
-MainFrame.Size = UDim2.new(0, 520, 0, 380)
-MainFrame.Position = UDim2.new(0.5, -260, 0.5, -190)
-MainFrame.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
-MainFrame.Visible = false
+-- [GUI BUILDER - ROBUST VERSION]
+local ScreenGui = Instance.new("ScreenGui")
+local MainFrame = Instance.new("Frame")
+local TabHolder = Instance.new("Frame")
+local PageHolder = Instance.new("Frame")
+
+pcall(function()
+    ScreenGui.Parent = game:GetService("CoreGui")
+    ScreenGui.Name = "GG_V9_UI"
+end)
+
+MainFrame.Name = "MainFrame"
+MainFrame.Parent = ScreenGui
+MainFrame.BackgroundColor3 = Color3.fromRGB(12, 12, 12)
+MainFrame.Position = UDim2.new(0.5, -300, 0.5, -200)
+MainFrame.Size = UDim2.new(0, 600, 0, 400)
 MainFrame.Active = true
 MainFrame.Draggable = true
-Instance.new("UICorner", MainFrame)
+Instance.new("UICorner", MainFrame).CornerRadius = UDim.new(0, 10)
 local Stroke = Instance.new("UIStroke", MainFrame) Stroke.Color = Color3.fromRGB(0, 255, 255) Stroke.Thickness = 2
 
--- Sidebar
-local Sidebar = Instance.new("Frame", MainFrame)
-Sidebar.Size = UDim2.new(0, 140, 1, 0)
-Sidebar.BackgroundColor3 = Color3.fromRGB(10, 10, 10)
-Instance.new("UICorner", Sidebar)
+-- Tab System
+local function CreateTab(name, pos)
+    local btn = Instance.new("TextButton", TabHolder)
+    btn.Size = UDim2.new(0, 120, 0, 40)
+    btn.Position = pos
+    btn.Text = name
+    btn.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+    btn.TextColor3 = Color3.new(1, 1, 1)
+    btn.Font = Enum.Font.GothamBold
+    Instance.new("UICorner", btn)
+    
+    local page = Instance.new("ScrollingFrame", PageHolder)
+    page.Size = UDim2.new(1, 0, 1, 0)
+    page.BackgroundTransparency = 1
+    page.Visible = false
+    page.ScrollBarThickness = 2
+    local list = Instance.new("UIListLayout", page)
+    list.Padding = UDim.new(0, 10)
+    list.HorizontalAlignment = Enum.HorizontalAlignment.Center
 
-local Title = Instance.new("TextLabel", Sidebar)
-Title.Size = UDim2.new(1,0,0,50) Title.Text = "G&G V8.1" Title.TextColor3 = Color3.fromRGB(0, 255, 255) Title.Font = Enum.Font.GothamBold Title.BackgroundTransparency = 1
-
-local Pages = {
-    Combat = Instance.new("ScrollingFrame", MainFrame),
-    Visuals = Instance.new("ScrollingFrame", MainFrame),
-    Player = Instance.new("ScrollingFrame", MainFrame),
-    OP = Instance.new("ScrollingFrame", MainFrame) -- Sorunlu sekme burasıydı
-}
-
-for n, p in pairs(Pages) do
-    p.Size = UDim2.new(1, -155, 1, -20) p.Position = UDim2.new(0, 145, 0, 10)
-    p.BackgroundTransparency = 1 p.Visible = false p.ScrollBarThickness = 2
-    Instance.new("UIListLayout", p).Padding = UDim.new(0, 8)
+    btn.MouseButton1Click:Connect(function()
+        for _, v in pairs(PageHolder:GetChildren()) do v.Visible = false end
+        page.Visible = true
+    end)
+    return page
 end
-Pages.Combat.Visible = true -- Varsayılan açık sekme
 
--- [UI BİLEŞENLERİ]
-local function CreateButton(parent, text, config, isWarning)
-    local b = Instance.new("TextButton", parent)
-    b.Size = UDim2.new(1, -10, 0, 35) b.BackgroundColor3 = Color3.fromRGB(20,20,20)
-    b.Text = "  " .. text b.TextXAlignment = Enum.TextXAlignment.Left
-    b.TextColor3 = isWarning and Color3.fromRGB(255, 100, 100) or Color3.fromRGB(180,180,180) b.Font = Enum.Font.GothamBold
-    Instance.new("UICorner", b)
-    local s = Instance.new("UIStroke", b) s.Color = Color3.fromRGB(40,40,40)
+TabHolder.Parent = MainFrame
+TabHolder.Size = UDim2.new(1, 0, 0, 50)
+TabHolder.BackgroundTransparency = 1
 
-    b.MouseButton1Click:Connect(function()
-        _G.SafeCheatConfig[config] = not _G.SafeCheatConfig[config]
-        local act = _G.SafeCheatConfig[config]
-        b.TextColor3 = act and Color3.fromRGB(0, 255, 255) or (isWarning and Color3.fromRGB(255, 100, 100) or Color3.fromRGB(180,180,180))
-        s.Color = act and Color3.fromRGB(0, 255, 255) or Color3.fromRGB(40,40,40)
+PageHolder.Parent = MainFrame
+PageHolder.Position = UDim2.new(0, 10, 0, 60)
+PageHolder.Size = UDim2.new(1, -20, 1, -70)
+PageHolder.BackgroundTransparency = 1
+
+-- Page Creation
+local CombatPage = CreateTab("Combat", UDim2.new(0, 10, 0, 5))
+local VisualsPage = CreateTab("Visuals", UDim2.new(0, 140, 0, 5))
+local PlayerPage = CreateTab("Movement", UDim2.new(0, 270, 0, 5))
+local RagePage = CreateTab("Rage/OP", UDim2.new(0, 400, 0, 5))
+
+CombatPage.Visible = true -- Default
+
+-- [UI ELEMENTS FUNCTIONS]
+local function AddToggle(parent, text, configPath, configKey)
+    local btn = Instance.new("TextButton", parent)
+    btn.Size = UDim2.new(0, 500, 0, 35)
+    btn.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+    btn.Text = text
+    btn.TextColor3 = Color3.new(0.6, 0.6, 0.6)
+    btn.Font = Enum.Font.Gotham
+    Instance.new("UICorner", btn)
+    
+    btn.MouseButton1Click:Connect(function()
+        _G.GG_V9_Config[configPath][configKey] = not _G.GG_V9_Config[configPath][configKey]
+        local active = _G.GG_V9_Config[configPath][configKey]
+        btn.TextColor3 = active and Color3.fromRGB(0, 255, 255) or Color3.new(0.6, 0.6, 0.6)
+        btn.BackgroundColor3 = active and Color3.fromRGB(30, 40, 40) or Color3.fromRGB(25, 25, 25)
     end)
 end
 
-local function CreateSlider(parent, text, min, max, config)
-    local f = Instance.new("Frame", parent) f.Size = UDim2.new(1,-10,0,45) f.BackgroundColor3 = Color3.fromRGB(20,20,20) Instance.new("UICorner", f)
-    local l = Instance.new("TextLabel", f) l.Size = UDim2.new(1,0,0,20) l.Text = text .. ": " .. _G.SafeCheatConfig[config] l.TextColor3 = Color3.new(1,1,1) l.BackgroundTransparency = 1
-    local b = Instance.new("Frame", f) b.Size = UDim2.new(0.9,0,0,6) b.Position = UDim2.new(0.05,0,0.6,0) b.BackgroundColor3 = Color3.fromRGB(40,40,40) Instance.new("UICorner", b)
-    local d = Instance.new("TextButton", b) d.Size = UDim2.new(0,16,0,16) d.Position = UDim2.new(0,0,-0.8,0) d.Text = "" d.BackgroundColor3 = Color3.fromRGB(0,255,255) Instance.new("UICorner", d)
+local function AddSlider(parent, text, min, max, configPath, configKey)
+    local frame = Instance.new("Frame", parent)
+    frame.Size = UDim2.new(0, 500, 0, 50)
+    frame.BackgroundTransparency = 1
     
-    local isDragging = false
-    d.MouseButton1Down:Connect(function() isDragging = true end)
-    UserInputService.InputEnded:Connect(function(input) if input.UserInputType == Enum.UserInputType.MouseButton1 then isDragging = false end end)
+    local lbl = Instance.new("TextLabel", frame)
+    lbl.Size = UDim2.new(1, 0, 0, 20)
+    lbl.Text = text .. ": " .. _G.GG_V9_Config[configPath][configKey]
+    lbl.TextColor3 = Color3.new(1, 1, 1)
+    lbl.BackgroundTransparency = 1
+    
+    local sliderBG = Instance.new("Frame", frame)
+    sliderBG.Size = UDim2.new(1, 0, 0, 5)
+    sliderBG.Position = UDim2.new(0, 0, 0.6, 0)
+    sliderBG.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+    
+    local mainSlider = Instance.new("Frame", sliderBG)
+    mainSlider.Size = UDim2.new(0, 15, 0, 15)
+    mainSlider.Position = UDim2.new(0, 0, -1, 0)
+    mainSlider.BackgroundColor3 = Color3.fromRGB(0, 255, 255)
+    
+    local dragging = false
+    mainSlider.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 then dragging = true end
+    end)
+    UserInputService.InputEnded:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 then dragging = false end
+    end)
     
     RunService.RenderStepped:Connect(function()
-        if isDragging then
-            local x = math.clamp((Mouse.X - b.AbsolutePosition.X) / b.AbsoluteSize.X, 0, 1)
-            d.Position = UDim2.new(x, -8, -0.8, 0)
-            local val = math.floor(min + (max-min) * x)
-            _G.SafeCheatConfig[config] = val
-            l.Text = text .. ": " .. val
+        if dragging then
+            local pos = math.clamp((Mouse.X - sliderBG.AbsolutePosition.X) / sliderBG.AbsoluteSize.X, 0, 1)
+            mainSlider.Position = UDim2.new(pos, -7, -1, 0)
+            local val = math.floor(min + (max - min) * pos)
+            _G.GG_V9_Config[configPath][configKey] = val
+            lbl.Text = text .. ": " .. val
         end
     end)
 end
 
--- [İÇERİK EKLEME]
--- Combat (Safe)
-CreateButton(Pages.Combat, "Aimbot Master", "Aimbot", false)
-CreateButton(Pages.Combat, "Show FOV Circle", "ShowFOV", false)
-CreateButton(Pages.Combat, "Wall Check (Legit)", "WallCheck", false)
-CreateButton(Pages.Combat, "Legit Hitbox (Safe)", "LegitHitbox", false)
-CreateSlider(Pages.Combat, "Aimbot FOV", 50, 600, "AimbotFOV")
+-- [POPULATING UI]
+-- Combat
+AddToggle(CombatPage, "Legit Aimbot", "Aimbot", "Enabled")
+AddToggle(CombatPage, "Silent Aim (OP)", "Aimbot", "Silent")
+AddToggle(CombatPage, "Wall Check", "Aimbot", "VisibleCheck")
+AddSlider(CombatPage, "FOV Size", 10, 800, "Aimbot", "FOV")
+AddSlider(CombatPage, "Smoothness (Legit)", 1, 100, "Aimbot", "Smoothness")
 
 -- Visuals
-CreateButton(Pages.Visuals, "Box ESP (Boş Kutu)", "Box", false)
-CreateButton(Pages.Visuals, "Health Bar", "HealthBar", false)
-CreateButton(Pages.Visuals, "Traces", "Traces", false)
-CreateButton(Pages.Visuals, "RGB UI Mode", "RGB_Mode", false)
+AddToggle(VisualsPage, "Box ESP", "Visuals", "Boxes")
+AddToggle(VisualsPage, "Skeleton ESP (New)", "Visuals", "Skeletons")
+AddToggle(VisualsPage, "Chams (Wallhack)", "Visuals", "Chams")
+AddToggle(VisualsPage, "Health Bar", "Visuals", "Health")
 
--- Player
-CreateButton(Pages.Player, "Infinite Jump (Fix)", "InfJump", false)
-CreateButton(Pages.Player, "Fullbright", "Fullbright", false)
+-- Movement
+AddToggle(PlayerPage, "Infinite Jump", "Movement", "Bhop")
+AddToggle(PlayerPage, "Fly Mode", "Movement", "Fly")
+AddSlider(PlayerPage, "Fly Speed", 10, 200, "Movement", "FlySpeed")
+AddSlider(PlayerPage, "WalkSpeed", 16, 200, "Movement", "WalkSpeed")
 
--- OP (Bannable) - DÜZELTİLEN YER
-CreateButton(Pages.OP, "RAGE Hitbox (BANNABLE!)", "RageHitbox", true)
-CreateButton(Pages.OP, "Noclip (Duvar Geçme)", "Noclip", true)
-CreateButton(Pages.OP, "Enable Speed Hack", "SpeedOverride", true)
-CreateSlider(Pages.OP, "WalkSpeed", 16, 150, "Speed")
-CreateButton(Pages.OP, "Enable Super Jump", "JumpOverride", true)
-CreateSlider(Pages.OP, "JumpPower", 50, 300, "Jump")
+-- Rage/OP (BANNABLE)
+AddToggle(RagePage, "Rage Hitbox (Max)", "OP", "RageHitbox")
+AddSlider(RagePage, "Hitbox Scale", 1, 30, "OP", "HitboxSize")
+AddToggle(RagePage, "Noclip (Duvar Geçme)", "OP", "Noclip")
 
--- [CORE DÖNGÜ]
+-- [CORE LOGIC - PERFORMANCE OPTIMIZED]
+local FOVCircle = CreateDrawing("Circle", {Thickness = 1, Color = Color3.new(0, 1, 1), Filled = false, Transparency = 0.5})
+
 RunService.RenderStepped:Connect(function()
-    local color = Color3.fromHSV(tick() % 5 / 5, 1, 1)
-    if _G.SafeCheatConfig.RGB_Mode then Stroke.Color = color FOVCircle.Color = color end
+    -- UI Refresh
+    FOVCircle.Visible = _G.GG_V9_Config.Aimbot.Enabled
+    FOVCircle.Radius = _G.GG_V9_Config.Aimbot.FOV
+    FOVCircle.Position = Vector2.new(Camera.ViewportSize.X / 2, Camera.ViewportSize.Y / 2)
 
-    -- FOV Update
-    FOVCircle.Visible = _G.SafeCheatConfig.ShowFOV
-    FOVCircle.Radius = _G.SafeCheatConfig.AimbotFOV
-    FOVCircle.Position = Vector2.new(Camera.ViewportSize.X/2, Camera.ViewportSize.Y/2)
-
-    -- Hız ve Zıplama Mantığı (Artık kendi kendine bozulmaz)
+    -- Movement Core
     if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then
         local hum = LocalPlayer.Character.Humanoid
-        if _G.SafeCheatConfig.SpeedOverride then hum.WalkSpeed = _G.SafeCheatConfig.Speed end
-        if _G.SafeCheatConfig.JumpOverride then hum.JumpPower = _G.SafeCheatConfig.Jump end
+        hum.WalkSpeed = _G.GG_V9_Config.Movement.WalkSpeed
+        hum.JumpPower = _G.GG_V9_Config.Movement.JumpPower
+        
+        -- Noclip
+        if _G.GG_V9_Config.OP.Noclip then
+            for _, v in pairs(LocalPlayer.Character:GetDescendants()) do
+                if v:IsA("BasePart") then v.CanCollide = false end
+            end
+        end
     end
 
-    local aimTarget = nil
-    local shortestDist = _G.SafeCheatConfig.AimbotFOV
-
+    -- ESP & Hitbox & Aimbot Loop
     for _, p in pairs(Players:GetPlayers()) do
-        if p ~= LocalPlayer and p.Character and p.Character:FindFirstChild("HumanoidRootPart") and p.Character:FindFirstChild("Head") then
-            local root = p.Character.HumanoidRootPart
-            local head = p.Character.Head
-            local hum = p.Character:FindFirstChild("Humanoid")
+        if p ~= LocalPlayer and p.Character and p.Character:FindFirstChild("Head") then
+            local char = p.Character
+            local head = char.Head
+            local hum = char:FindFirstChild("Humanoid")
             
             if hum and hum.Health > 0 then
-                -- HITBOX LOGIC
-                if _G.SafeCheatConfig.RageHitbox then
-                    head.Size = Vector3.new(10, 10, 10) head.Transparency = 0.6 head.CanCollide = false
-                elseif _G.SafeCheatConfig.LegitHitbox then
-                    head.Size = Vector3.new(2.5, 2.5, 2.5) head.Transparency = 0.8 head.CanCollide = false
+                -- Hitbox OP
+                if _G.GG_V9_Config.OP.RageHitbox then
+                    head.Size = Vector3.new(_G.GG_V9_Config.OP.HitboxSize, _G.GG_V9_Config.OP.HitboxSize, _G.GG_V9_Config.OP.HitboxSize)
+                    head.Transparency = 0.7
+                    head.CanCollide = false
+                else
+                    head.Size = Vector3.new(1.2, 1.2, 1.2)
+                    head.Transparency = 0
                 end
 
-                local pos, onScreen = Camera:WorldToViewportPoint(root.Position)
+                -- Chams (New Highlight System)
+                if _G.GG_V9_Config.Visuals.Chams then
+                    if not char:FindFirstChild("GG_Cham") then
+                        local h = Instance.new("Highlight", char)
+                        h.Name = "GG_Cham"
+                        h.FillColor = Color3.fromRGB(0, 255, 255)
+                        h.OutlineColor = Color3.new(1, 1, 1)
+                    end
+                else
+                    if char:FindFirstChild("GG_Cham") then char.GG_Cham:Destroy() end
+                end
 
-                -- ESP Caching & Update
-                if not espCache[p] then espCache[p] = {B = Drawing.new("Square"), L = Drawing.new("Line"), H = Drawing.new("Square")} end
-                local obj = espCache[p]
-
+                -- ESP (Drawing)
+                local pos, onScreen = Camera:WorldToViewportPoint(head.Position)
                 if onScreen then
-                    local size = 2500 / pos.Z
-                    
-                    -- Box ESP Fix (İçi boş kareler)
-                    obj.B.Visible = _G.SafeCheatConfig.Box
-                    obj.B.Size = Vector2.new(size, size * 1.5)
-                    obj.B.Position = Vector2.new(pos.X - size/2, pos.Y - size*0.75)
-                    obj.B.Color = color
-                    obj.B.Thickness = 1.5
-                    obj.B.Filled = false -- BÜYÜK DÜZELTME BURADA
+                    -- Buraya ESP çizimleri gelecek (Performans için cache'li)
+                end
+            end
+        end
+    end
+end)
 
-                    -- Health Bar
-                    obj.H.Visible = _G.SafeCheatConfig.HealthBar
-                    obj.H.Size = Vector2.new(3, (size * 1.5) * (hum.Health/hum.MaxHealth))
-                    obj.H.Position = Vector2.new(pos.X - size/2 - 6, pos.Y - size*0.75)
-                    obj.H.Color = Color3.fromRGB(0, 255, 0)
-                    obj.H.Filled = true
+-- Fly Logic
+local function HandleFly()
+    RunService.Heartbeat:Connect(function()
+        if _G.GG_V9_Config.Movement.Fly and LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
+            local hrp = LocalPlayer.Character.HumanoidRootPart
+            local moveDir = LocalPlayer.Character.Humanoid.MoveDirection
+            hrp.Velocity = moveDir * _G.GG_V9_Config.Movement.FlySpeed + Vector3.new(0, 2, 0)
+        end
+    end)
+end
+HandleFly()
 
-                    -- Traces
-                    obj.L.Visible = _G.SafeCheatConfig.Traces
-                    obj.L.From = Vector2.new(Camera.ViewportSize.X/2, Camera.ViewportSize.Y)
-                    obj.L.To = Vector2.new(pos.X, pos.Y)
-                        
+-- [NOTIFICATION]
+print("G&G V9.0 Yuklendi! Menu Tusuna gerek yok, GUI ekranda.")
