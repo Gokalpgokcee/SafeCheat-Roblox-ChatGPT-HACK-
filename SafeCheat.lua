@@ -1,11 +1,11 @@
--- GOK CHEAT - Delta Compatible FPS Cheat
+-- Rayfield UI Cheat for FPS Games
 loadstring(game:HttpGet("https://raw.githubusercontent.com/ScriptZ-Mike/Rayfield/main/Source"))()
 
 local Window = Rayfield:CreateWindow({
-    Name = "GOK CHEAT",
-    LoadingTitle = "GOK CHEAT Loading...",
-    LoadingSubtitle = "by Delta User",
-    ConfigurationSaving = { Enabled = true, FolderName = "GOK_CHEAT", FileName = "Config" }
+    Name = "FPS Cheat",
+    LoadingTitle = "Loading Cheat...",
+    LoadingSubtitle = "by User",
+    ConfigurationSaving = { Enabled = true, FolderName = "FPS_Cheat", FileName = "Config" }
 })
 
 local AimbotTab = Window:CreateTab("Aimbot", "rbxassetid://4483345998")
@@ -406,8 +406,8 @@ RunService.RenderStepped:Connect(function()
 end)
 
 Rayfield:Notify({
-    Title = "GOK CHEAT Loaded",
-    Content = "Delta ready - FPS Cheat activated!",
+    Title = "Cheat Loaded",
+    Content = "FPS Cheat activated!",
     Duration = 3,
     Image = 4483362458
 })
