@@ -1,34 +1,22 @@
--- GOK CHEAT V5 - RAYFIELD DOĞRU LİNK İLE
--- Arsenal, Bad Business, Phantom Forces için optimize edildi
+-- GOK CHEAT V6 - DELTA MOBILE UYUMLU
+-- HATASIZ, SADE, OPTİMİZE
 
---[[
-ÖNEMLİ: Bu kod, senin verdiğin şu linki kullanır:
-https://raw.githubusercontent.com/jensonhirst/Rayfield/refs/heads/main/source
-]]
+local Rayfield = loadstring(game:HttpGet('https://raw.githubusercontent.com/jensonhirst/Rayfield/main/source'))()
 
--- Rayfield UI Library'yi senin verdiğin linkle yükle
-local Rayfield = loadstring(game:HttpGet('https://raw.githubusercontent.com/jensonhirst/Rayfield/refs/heads/main/source'))()
-
--- Ana pencereyi oluştur
 local Window = Rayfield:CreateWindow({
-    Name = "GOK CHEAT V5",
-    LoadingTitle = "FPS HILE YUKLENIYOR...",
+    Name = "GOK CHEAT V6",
+    LoadingTitle = "Delta Mobile Optimized",
     LoadingSubtitle = "by Gokalp",
-    ConfigurationSaving = { 
-        Enabled = true, 
-        FolderName = "GOKCHEAT", 
-        FileName = "FPS_Config" 
-    },
+    ConfigurationSaving = { Enabled = false },
     KeySystem = false
 })
 
--- Sekmeler (Tabs)
-local CombatTab = Window:CreateTab("Combat ⚔️", "rbxassetid://4483345998")
-local VisualsTab = Window:CreateTab("Visuals 👁️", "rbxassetid://4483345998")
-local MiscTab = Window:CreateTab("Misc ⚙️", "rbxassetid://4483362458")
+local CombatTab = Window:CreateTab("Combat", "rbxassetid://4483345998")
+local VisualsTab = Window:CreateTab("Visuals", "rbxassetid://4483345998")
+local MovementTab = Window:CreateTab("Movement", "rbxassetid://4483362458")
 
 -- ==================================================
--- AYARLAR (Settings)
+-- AYARLAR
 -- ==================================================
 local Settings = {
     Aimbot = false,
@@ -40,239 +28,150 @@ local Settings = {
     Hitbox = false,
     HitboxSize = 3,
     ESP = false,
-    ESPBox = false,
     ESPName = false,
-    ESPHealth = false,
     Walkspeed = 16,
     AntiAFK = true
 }
 
 -- ==================================================
--- COMBAT SEKMESİ (Aimbot + Hitbox)
+-- COMBAT TAB
 -- ==================================================
-
--- Aimbot Aç/Kapa
 CombatTab:CreateToggle({
-    Name = "Aimbot (Hedef Kilidi)",
+    Name = "Aimbot",
     CurrentValue = false,
-    Flag = "AimbotToggle",
-    Callback = function(value)
-        Settings.Aimbot = value
-    end
+    Flag = "Aimbot",
+    Callback = function(v) Settings.Aimbot = v end
 })
 
--- FOV Ayarı (Hedef alma mesafesi)
 CombatTab:CreateSlider({
-    Name = "Aimbot FOV (Mesafe)",
+    Name = "FOV",
     Range = {50, 500},
     Increment = 10,
     CurrentValue = 180,
-    Flag = "AimbotFOV",
-    Callback = function(value)
-        Settings.AimbotFOV = value
-    end
+    Flag = "FOV",
+    Callback = function(v) Settings.AimbotFOV = v end
 })
 
--- Smoothness Ayarı (Yumuşaklık)
 CombatTab:CreateSlider({
-    Name = "Smoothness (Yumuşaklık)",
+    Name = "Smoothness",
     Range = {1, 20},
     Increment = 1,
     CurrentValue = 5,
-    Flag = "AimbotSmooth",
-    Callback = function(value)
-        Settings.AimbotSmooth = value
-    end
+    Flag = "Smooth",
+    Callback = function(v) Settings.AimbotSmooth = v end
 })
 
--- Hedeflenecek Vücut Parçası
 CombatTab:CreateDropdown({
-    Name = "Hedef Vücut Parçası",
+    Name = "Hit Part",
     Options = {"Head", "Torso", "HumanoidRootPart"},
     CurrentOption = "Head",
-    Flag = "AimbotPart",
-    Callback = function(option)
-        Settings.AimbotPart = option
-    end
+    Flag = "HitPart",
+    Callback = function(v) Settings.AimbotPart = v end
 })
 
--- Takım Kontrolü
 CombatTab:CreateToggle({
-    Name = "Takım Kontrolü (Takımını Vurma)",
+    Name = "Team Check",
     CurrentValue = true,
     Flag = "TeamCheck",
-    Callback = function(value)
-        Settings.TeamCheck = value
-    end
+    Callback = function(v) Settings.TeamCheck = v end
 })
 
--- Görünürlük Kontrolü
 CombatTab:CreateToggle({
-    Name = "Görünürlük Kontrolü (Duvar Arkasını Vurma)",
+    Name = "Visible Check",
     CurrentValue = true,
     Flag = "VisibleCheck",
-    Callback = function(value)
-        Settings.VisibleCheck = value
-    end
+    Callback = function(v) Settings.VisibleCheck = v end
 })
 
--- Hitbox Büyütme
 CombatTab:CreateToggle({
-    Name = "Hitbox Büyütme (Kafayı Büyüt)",
+    Name = "Hitbox Expander",
     CurrentValue = false,
-    Flag = "HitboxToggle",
-    Callback = function(value)
-        Settings.Hitbox = value
-    end
+    Flag = "Hitbox",
+    Callback = function(v) Settings.Hitbox = v end
 })
 
--- Hitbox Boyutu
 CombatTab:CreateSlider({
-    Name = "Hitbox Boyutu",
+    Name = "Hitbox Size",
     Range = {2, 10},
     Increment = 1,
     CurrentValue = 3,
     Flag = "HitboxSize",
-    Callback = function(value)
-        Settings.HitboxSize = value
-    end
+    Callback = function(v) Settings.HitboxSize = v end
 })
 
 -- ==================================================
--- VISUALS SEKMESİ (ESP)
+-- VISUALS TAB
 -- ==================================================
-
--- ESP Aç/Kapa
 VisualsTab:CreateToggle({
-    Name = "ESP Aç",
+    Name = "ESP",
     CurrentValue = false,
-    Flag = "ESPToggle",
-    Callback = function(value)
-        Settings.ESP = value
-    end
+    Flag = "ESP",
+    Callback = function(v) Settings.ESP = v end
 })
 
--- Kutu ESP
 VisualsTab:CreateToggle({
-    Name = "Kutu ESP (Box)",
-    CurrentValue = false,
-    Flag = "ESPBox",
-    Callback = function(value)
-        Settings.ESPBox = value
-    end
-})
-
--- İsim ESP
-VisualsTab:CreateToggle({
-    Name = "İsim ESP (Name)",
+    Name = "ESP Names",
     CurrentValue = false,
     Flag = "ESPName",
-    Callback = function(value)
-        Settings.ESPName = value
-    end
-})
-
--- Sağlık ESP
-VisualsTab:CreateToggle({
-    Name = "Sağlık ESP (Health)",
-    CurrentValue = false,
-    Flag = "ESPHealth",
-    Callback = function(value)
-        Settings.ESPHealth = value
-    end
+    Callback = function(v) Settings.ESPName = v end
 })
 
 -- ==================================================
--- MISC SEKMESİ
+-- MOVEMENT TAB
 -- ==================================================
-
--- Walkspeed (Hız)
-MiscTab:CreateSlider({
-    Name = "WalkSpeed (Hız)",
+MovementTab:CreateSlider({
+    Name = "WalkSpeed",
     Range = {16, 250},
     Increment = 1,
     CurrentValue = 16,
-    Flag = "Walkspeed",
-    Callback = function(value)
-        Settings.Walkspeed = value
-        if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then
-            LocalPlayer.Character.Humanoid.WalkSpeed = value
-        end
-    end
+    Flag = "WalkSpeed",
+    Callback = function(v) Settings.Walkspeed = v end
 })
 
--- Anti-AFK
-MiscTab:CreateToggle({
-    Name = "Anti-AFK (Atılma Engelle)",
+MovementTab:CreateToggle({
+    Name = "Anti-AFK",
     CurrentValue = true,
     Flag = "AntiAFK",
-    Callback = function(value)
-        Settings.AntiAFK = value
-    end
+    Callback = function(v) Settings.AntiAFK = v end
 })
 
--- FPS Boost Butonu
-MiscTab:CreateButton({
-    Name = "FPS Boost (Efektleri Temizle)",
+MovementTab:CreateButton({
+    Name = "FPS Boost",
     Callback = function()
         for _, v in pairs(workspace:GetDescendants()) do
-            if v:IsA("ParticleEmitter") or v:IsA("Trail") or v:IsA("Smoke") or v:IsA("Fire") then
-                v:Destroy()
-            end
+            if v:IsA("ParticleEmitter") or v:IsA("Trail") then v:Destroy() end
         end
-        Rayfield:Notify({
-            Title = "FPS Boost",
-            Content = "Gereksiz efektler temizlendi!",
-            Duration = 3
-        })
-    end
-})
-
--- GUI'yi Gizle/Göster Butonu
-MiscTab:CreateButton({
-    Name = "GUI'yi Gizle/Göster (Ins tuşu)",
-    Callback = function()
-        Rayfield:Notify({
-            Title = "GUI Kontrol",
-            Content = "Ins (Insert) tuşu ile gizleyip gösterebilirsin!",
-            Duration = 3
-        })
+        Rayfield:Notify({Title = "FPS Boost", Content = "Efektler temizlendi", Duration = 3})
     end
 })
 
 -- ==================================================
--- SERVİSLER
+-- SERVISLER
 -- ==================================================
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
-local UserInputService = game:GetService("UserInputService")
 local Camera = workspace.CurrentCamera
 local LocalPlayer = Players.LocalPlayer
 local Mouse = LocalPlayer:GetMouse()
 
 -- ==================================================
--- YARDIMCI FONKSİYONLAR
+-- FONKSIYONLAR
 -- ==================================================
-
--- Düşman mı kontrolü
-local function IsEnemy(player)
-    if player == LocalPlayer then return false end
-    if not player.Character or not player.Character:FindFirstChild("Humanoid") then return false end
-    if player.Character.Humanoid.Health <= 0 then return false end
-    if Settings.TeamCheck and player.Team == LocalPlayer.Team then return false end
+local function IsEnemy(p)
+    if p == LocalPlayer then return false end
+    if not p.Character or not p.Character:FindFirstChild("Humanoid") then return false end
+    if p.Character.Humanoid.Health <= 0 then return false end
+    if Settings.TeamCheck and p.Team == LocalPlayer.Team then return false end
     return true
 end
 
--- En yakın düşmanı bul
 local function GetClosestEnemy()
     local closest = nil
     local closestDist = Settings.AimbotFOV
     
-    for _, player in ipairs(Players:GetPlayers()) do
-        if IsEnemy(player) then
-            local root = player.Character:FindFirstChild("HumanoidRootPart") or 
-                         player.Character:FindFirstChild("Torso") or 
-                         player.Character:FindFirstChild("UpperTorso")
+    for _, p in ipairs(Players:GetPlayers()) do
+        if IsEnemy(p) then
+            local root = p.Character:FindFirstChild("HumanoidRootPart") or p.Character:FindFirstChild("Torso") or p.Character:FindFirstChild("UpperTorso")
             if root then
                 local pos, onScreen = Camera:WorldToViewportPoint(root.Position)
                 if onScreen then
@@ -281,12 +180,12 @@ local function GetClosestEnemy()
                         if Settings.VisibleCheck then
                             local ray = Ray.new(Camera.CFrame.Position, (root.Position - Camera.CFrame.Position).Unit * 1000)
                             local hit = workspace:FindPartOnRayWithIgnoreList(ray, {LocalPlayer.Character, Camera})
-                            if hit and hit:IsDescendantOf(player.Character) then
-                                closest = player
+                            if hit and hit:IsDescendantOf(p.Character) then
+                                closest = p
                                 closestDist = dist
                             end
                         else
-                            closest = player
+                            closest = p
                             closestDist = dist
                         end
                     end
@@ -298,17 +197,13 @@ local function GetClosestEnemy()
 end
 
 -- ==================================================
--- ANA DÖNGÜLER
+-- AIMBOT LOOP
 -- ==================================================
-
--- Aimbot Döngüsü
 RunService.RenderStepped:Connect(function()
-    if Settings.Aimbot then
+    if Settings.Aimbot and LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then
         local target = GetClosestEnemy()
         if target and target.Character then
-            local targetPart = target.Character:FindFirstChild(Settings.AimbotPart) or 
-                               target.Character:FindFirstChild("Head") or 
-                               target.Character:FindFirstChild("HumanoidRootPart")
+            local targetPart = target.Character:FindFirstChild(Settings.AimbotPart) or target.Character:FindFirstChild("Head") or target.Character:FindFirstChild("HumanoidRootPart")
             if targetPart then
                 if Settings.AimbotSmooth > 1 then
                     local targetCF = CFrame.lookAt(Camera.CFrame.Position, targetPart.Position)
@@ -321,63 +216,57 @@ RunService.RenderStepped:Connect(function()
     end
 end)
 
--- Hitbox Döngüsü
+-- ==================================================
+-- HITBOX LOOP
+-- ==================================================
 RunService.Heartbeat:Connect(function()
     if Settings.Hitbox then
-        for _, player in ipairs(Players:GetPlayers()) do
-            if IsEnemy(player) and player.Character and player.Character:FindFirstChild("Head") then
-                player.Character.Head.Size = Vector3.new(Settings.HitboxSize, Settings.HitboxSize, Settings.HitboxSize)
-                player.Character.Head.Transparency = 0.5
-                player.Character.Head.CanCollide = false
-                player.Character.Head.Material = Enum.Material.Neon
+        for _, p in ipairs(Players:GetPlayers()) do
+            if IsEnemy(p) and p.Character and p.Character:FindFirstChild("Head") then
+                p.Character.Head.Size = Vector3.new(Settings.HitboxSize, Settings.HitboxSize, Settings.HitboxSize)
+                p.Character.Head.Transparency = 0.5
             end
         end
     else
-        for _, player in ipairs(Players:GetPlayers()) do
-            if player.Character and player.Character:FindFirstChild("Head") then
-                player.Character.Head.Size = Vector3.new(2, 1, 1)
-                player.Character.Head.Transparency = 0
-                player.Character.Head.CanCollide = true
-                player.Character.Head.Material = Enum.Material.Plastic
+        for _, p in ipairs(Players:GetPlayers()) do
+            if p.Character and p.Character:FindFirstChild("Head") then
+                p.Character.Head.Size = Vector3.new(2, 1, 1)
+                p.Character.Head.Transparency = 0
             end
         end
     end
 end)
 
--- ESP Döngüsü
-local ESPCache = {}
+-- ==================================================
+-- ESP LOOP
+-- ==================================================
 RunService.Heartbeat:Connect(function()
-    if Settings.ESP then
-        for _, player in ipairs(Players:GetPlayers()) do
-            if IsEnemy(player) then
-                local root = player.Character:FindFirstChild("HumanoidRootPart") or 
-                             player.Character:FindFirstChild("Torso") or 
-                             player.Character:FindFirstChild("UpperTorso")
+    if Settings.ESP and Settings.ESPName then
+        for _, p in ipairs(Players:GetPlayers()) do
+            if IsEnemy(p) then
+                local root = p.Character:FindFirstChild("HumanoidRootPart") or p.Character:FindFirstChild("Torso") or p.Character:FindFirstChild("UpperTorso")
                 if root then
                     local pos, onScreen = Camera:WorldToViewportPoint(root.Position)
                     if onScreen then
-                        -- İsim ESP
-                        if Settings.ESPName then
-                            local billboard = Instance.new("BillboardGui")
-                            billboard.Adornee = root
-                            billboard.Size = UDim2.new(0, 100, 0, 30)
-                            billboard.StudsOffset = Vector3.new(0, 3, 0)
-                            billboard.AlwaysOnTop = true
-                            billboard.Parent = Rayfield
-                            
-                            local label = Instance.new("TextLabel")
-                            label.Text = player.Name
-                            label.Size = UDim2.new(1, 0, 1, 0)
-                            label.BackgroundTransparency = 1
-                            label.TextColor3 = Color3.new(1, 0, 0)
-                            label.TextStrokeTransparency = 0
-                            label.TextScaled = true
-                            label.Parent = billboard
-                            
-                            task.delay(0.1, function()
-                                if billboard then billboard:Destroy() end
-                            end)
-                        end
+                        local bill = Instance.new("BillboardGui")
+                        bill.Adornee = root
+                        bill.Size = UDim2.new(0, 100, 0, 30)
+                        bill.StudsOffset = Vector3.new(0, 3, 0)
+                        bill.AlwaysOnTop = true
+                        bill.Parent = LocalPlayer.PlayerGui
+                        
+                        local text = Instance.new("TextLabel")
+                        text.Text = p.Name
+                        text.Size = UDim2.new(1, 0, 1, 0)
+                        text.BackgroundTransparency = 1
+                        text.TextColor3 = Color3.new(1, 0, 0)
+                        text.TextStrokeTransparency = 0
+                        text.TextScaled = true
+                        text.Parent = bill
+                        
+                        task.delay(0.1, function()
+                            if bill then bill:Destroy() end
+                        end)
                     end
                 end
             end
@@ -385,14 +274,18 @@ RunService.Heartbeat:Connect(function()
     end
 end)
 
--- WalkSpeed Döngüsü
+-- ==================================================
+-- WALKSPEED LOOP
+-- ==================================================
 RunService.Heartbeat:Connect(function()
     if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then
         LocalPlayer.Character.Humanoid.WalkSpeed = Settings.Walkspeed
     end
 end)
 
--- Anti-AFK
+-- ==================================================
+-- ANTI-AFK
+-- ==================================================
 if Settings.AntiAFK then
     LocalPlayer.Idled:Connect(function()
         game:GetService("VirtualUser"):CaptureController()
@@ -400,20 +293,13 @@ if Settings.AntiAFK then
     end)
 end
 
--- Insert tuşu ile GUI gizle/göster
-UserInputService.InputBegan:Connect(function(input)
-    if input.KeyCode == Enum.KeyCode.Insert then
-        Rayfield.Enabled = not Rayfield.Enabled
-    end
-end)
-
 -- ==================================================
--- BAŞLANGIÇ MESAJI
+-- BASLANGIC MESAJI
 -- ==================================================
 Rayfield:Notify({
-    Title = "GOK CHEAT V5",
-    Content = "Doğru Rayfield linki ile yüklendi! Insert tuşu ile gizle/göster.",
-    Duration = 5
+    Title = "GOK CHEAT V6",
+    Content = "Delta Mobile icin optimize edildi",
+    Duration = 3
 })
 
-print("GOK CHEAT V5 YÜKLENDİ - Doğru Rayfield linki kullanıldı")
+print("GOK CHEAT V6 YUKLENDI - Shadow hatasi cozuldu")
