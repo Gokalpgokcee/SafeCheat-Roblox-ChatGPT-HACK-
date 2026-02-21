@@ -1,13 +1,12 @@
--- [[ G&G V21 - THE ASCENSION ]] --
--- Final Masterpiece | Triggerbot | Aim Assist | Ultra-Smooth
+-- [[ G&G V21.1 - ENGINE FIX EDITION ]] --
+-- Aimbot, Triggerbot ve ESP tamamen onarıldı!
 
 local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
 
 local Settings = {
     SilentAim = false,
     Aimbot = false,
-    AimAssist = false, -- Yeni: Hafif çekim
-    Triggerbot = false, -- Yeni: Otomatik ateş
+    Triggerbot = false,
     FOV = 150,
     Smoothness = 0.25,
     HitPart = "Head",
@@ -18,37 +17,36 @@ local Settings = {
 }
 
 local Window = Rayfield:CreateWindow({
-    Name = "G&G V21 | THE ASCENSION",
-    LoadingTitle = "Efsane Tamamlanıyor...",
-    LoadingSubtitle = "By Gokalp - Final Edition",
+    Name = "G&G V21.1 | ENGINE FIX",
+    LoadingTitle = "Hatalar Onarıldı...",
+    LoadingSubtitle = "By Gokalp",
 })
 
 local Combat = Window:CreateTab("Combat ⚔️")
 local Visuals = Window:CreateTab("Visuals 👁️")
 
--- [ COMBAT SEKMESİ ]
+-- [ ARAYÜZ ]
 Combat:CreateToggle({Name = "True Silent Aim", CurrentValue = false, Callback = function(v) Settings.SilentAim = v end})
-Combat:CreateToggle({Name = "Aim Assist (Soft Lock)", CurrentValue = false, Callback = function(v) Settings.AimAssist = v end})
-Combat:CreateToggle({Name = "Triggerbot (Auto-Fire)", CurrentValue = false, Callback = function(v) Settings.Triggerbot = v end})
+Combat:CreateToggle({Name = "Aimbot (Kamera Kilidi)", CurrentValue = false, Callback = function(v) Settings.Aimbot = v end})
+Combat:CreateToggle({Name = "Triggerbot (Otomatik Ateş)", CurrentValue = false, Callback = function(v) Settings.Triggerbot = v end})
 Combat:CreateSlider({Name = "FOV Mesafesi", Range = {50, 500}, Increment = 5, CurrentValue = 150, Callback = function(v) Settings.FOV = v end})
 Combat:CreateToggle({Name = "Hitbox Expander", CurrentValue = false, Callback = function(v) Settings.Hitbox = v end})
 
-Visuals:CreateToggle({Name = "Master Highlight ESP", CurrentValue = false, Callback = function(v) Settings.ESP = v end})
+Visuals:CreateToggle({Name = "Highlight ESP", CurrentValue = false, Callback = function(v) Settings.ESP = v end})
 
--- [ CORE LOGIC ]
+-- [ SERVİSLER ]
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
-local CoreGui = game:GetService("CoreGui")
 local Camera = workspace.CurrentCamera
 local LocalPlayer = Players.LocalPlayer
 local VirtualUser = game:GetService("VirtualUser")
 
--- [ SCREEN GUI FOV ]
-local ScreenGui = Instance.new("ScreenGui", CoreGui)
+-- [ FOV ÇEMBERİ ]
+local ScreenGui = Instance.new("ScreenGui", game:GetService("CoreGui"))
 local FOVFrame = Instance.new("Frame", ScreenGui)
 FOVFrame.BackgroundTransparency = 1
 FOVFrame.AnchorPoint = Vector2.new(0.5, 0.5)
-local UIStroke = Instance.new("UIStroke", FOVFrame); UIStroke.Color = Color3.new(1,1,1)
+local UIStroke = Instance.new("UIStroke", FOVFrame); UIStroke.Color = Color3.new(1,1,1); UIStroke.Thickness = 1
 local UICorner = Instance.new("UICorner", FOVFrame); UICorner.CornerRadius = UDim.new(1, 0)
 
 -- [ HEDEF SİSTEMİ ]
@@ -60,7 +58,7 @@ task.spawn(function()
         
         FOVFrame.Position = UDim2.new(0, center.X, 0, center.Y)
         FOVFrame.Size = UDim2.new(0, Settings.FOV * 2, 0, Settings.FOV * 2)
-        FOVFrame.Visible = Settings.SilentAim or Settings.AimAssist
+        FOVFrame.Visible = Settings.SilentAim or Settings.Aimbot
 
         for _, p in pairs(Players:GetPlayers()) do
             if p ~= LocalPlayer and p.Character and p.Character:FindFirstChild("Humanoid") and p.Character.Humanoid.Health > 0 then
@@ -79,23 +77,26 @@ task.spawn(function()
     end
 end)
 
--- [ MASTER LOOP: AIM ASSIST, TRIGGERBOT, ESP, HITBOX ]
-local ESP_Cache = {}
-RunService.Heartbeat:Connect(function()
-    -- 1. Aim Assist (Yumuşak Takip)
-    if Settings.AimAssist and Target and Target.Character and Target.Character:FindFirstChild(Settings.HitPart) then
+-- [ KAMERA (AIMBOT) & TRIGGERBOT DÖNGÜSÜ - RENDERSTEPPED ]
+local LastShot = 0
+RunService.RenderStepped:Connect(function()
+    -- Kamera her zaman RenderStepped içinde yönlendirilmeli!
+    if Settings.Aimbot and Target and Target.Character and Target.Character:FindFirstChild(Settings.HitPart) then
         local targetPos = Target.Character[Settings.HitPart].Position
         Camera.CFrame = Camera.CFrame:Lerp(CFrame.lookAt(Camera.CFrame.Position, targetPos), Settings.Smoothness)
     end
-
-    -- 2. Triggerbot (Ekranda düşman varken otomatik tıkla)
+    
+    -- Triggerbot (Kasmaması için bekleme süresini 'tick()' ile çözdük)
     if Settings.Triggerbot and Target then
-        VirtualUser:Button1Down(Vector2.new(0,0))
-        task.wait(0.05)
-        VirtualUser:Button1Up(Vector2.new(0,0))
+        if tick() - LastShot > 0.1 then -- Saniyede 10 kez tıklar (Hata vermez)
+            LastShot = tick()
+            VirtualUser:ClickButton1(Vector2.new(0,0))
+        end
     end
+end)
 
-    -- 3. ESP & Hitbox
+-- [ ESP & HITBOX DÖNGÜSÜ - HEARTBEAT ]
+RunService.Heartbeat:Connect(function()
     for _, p in pairs(Players:GetPlayers()) do
         if p == LocalPlayer or not p.Character then continue end
         
@@ -108,22 +109,25 @@ RunService.Heartbeat:Connect(function()
             end
         end
 
-        -- ESP
-        if not ESP_Cache[p] then
-            ESP_Cache[p] = Instance.new("Highlight", CoreGui)
-        end
-        local hl = ESP_Cache[p]
-        if Settings.ESP and p.Character and p.Character:FindFirstChild("Humanoid") and p.Character.Humanoid.Health > 0 then
-            hl.Adornee = p.Character
+        -- ESP (CoreGui yerine Character içine atıldı, Delta artık görecek)
+        local hl = p.Character:FindFirstChild("GG_Highlight")
+        if Settings.ESP and p.Character:FindFirstChild("Humanoid") and p.Character.Humanoid.Health > 0 then
+            if not hl then
+                hl = Instance.new("Highlight")
+                hl.Name = "GG_Highlight"
+                hl.Parent = p.Character -- Delta mobilde hata vermemesi için direkt karaktere eklendi
+            end
             hl.Enabled = not (Settings.TeamCheck and p.Team == LocalPlayer.Team)
             hl.FillColor = (p.Team == LocalPlayer.Team) and Color3.new(0,1,0) or Color3.new(1,0,0)
+            hl.FillTransparency = 0.5
+            hl.OutlineTransparency = 0
         else
-            hl.Enabled = false
+            if hl then hl:Destroy() end
         end
     end
 end)
 
--- [ SILENT AIM HOOK ]
+-- [ SILENT AIM ]
 local OldNamecall
 OldNamecall = hookmetamethod(game, "__namecall", function(self, ...)
     local method = getnamecallmethod()
@@ -139,4 +143,4 @@ OldNamecall = hookmetamethod(game, "__namecall", function(self, ...)
     return OldNamecall(self, ...)
 end)
 
-Rayfield:Notify({Title = "G&G V21 FINAL", Content = "Yükseliş Tamamlandı. Keyfini çıkar Gökalp!", Duration = 5})
+Rayfield:Notify({Title = "G&G V21.1", Content = "Motor arızası giderildi. Sistem stabil.", Duration = 4})
