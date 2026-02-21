@@ -1,75 +1,126 @@
--- [[ G&G V21.1 - ENGINE FIX EDITION ]] --
--- Aimbot, Triggerbot ve ESP tamamen onarıldı!
+-- [[ G&G V22 - DRAWING API EDITION ]] --
+-- ESP tamamen Drawing API'ye taşındı.
+-- Aimbot ve Triggerbot Mobile için optimize edildi.
 
 local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
 
 local Settings = {
-    SilentAim = false,
     Aimbot = false,
+    SilentAim = false,
     Triggerbot = false,
     FOV = 150,
-    Smoothness = 0.25,
+    Smoothness = 0.2, -- 0 ile 1 arası (0.1 çok yavaş, 1 anlık)
     HitPart = "Head",
-    Hitbox = false,
-    HitboxSize = 4,
     ESP = false,
-    TeamCheck = true
+    Tracers = false,
+    TeamCheck = true,
+    Hitbox = false,
+    HitboxSize = 4
 }
 
 local Window = Rayfield:CreateWindow({
-    Name = "G&G V21.1 | ENGINE FIX",
-    LoadingTitle = "Hatalar Onarıldı...",
-    LoadingSubtitle = "By Gokalp",
+    Name = "G&G V22 | DRAWING API",
+    LoadingTitle = "Çizim Motoru Hazırlanıyor...",
+    LoadingSubtitle = "by Gokalp",
 })
 
 local Combat = Window:CreateTab("Combat ⚔️")
 local Visuals = Window:CreateTab("Visuals 👁️")
 
--- [ ARAYÜZ ]
-Combat:CreateToggle({Name = "True Silent Aim", CurrentValue = false, Callback = function(v) Settings.SilentAim = v end})
-Combat:CreateToggle({Name = "Aimbot (Kamera Kilidi)", CurrentValue = false, Callback = function(v) Settings.Aimbot = v end})
-Combat:CreateToggle({Name = "Triggerbot (Otomatik Ateş)", CurrentValue = false, Callback = function(v) Settings.Triggerbot = v end})
-Combat:CreateSlider({Name = "FOV Mesafesi", Range = {50, 500}, Increment = 5, CurrentValue = 150, Callback = function(v) Settings.FOV = v end})
+-- [ UI ]
+Combat:CreateToggle({Name = "Aimbot (Lock)", CurrentValue = false, Callback = function(v) Settings.Aimbot = v end})
+Combat:CreateToggle({Name = "Silent Aim", CurrentValue = false, Callback = function(v) Settings.SilentAim = v end})
+Combat:CreateToggle({Name = "Triggerbot", CurrentValue = false, Callback = function(v) Settings.Triggerbot = v end})
+Combat:CreateSlider({Name = "FOV", Range = {50, 500}, Increment = 5, CurrentValue = 150, Callback = function(v) Settings.FOV = v end})
 Combat:CreateToggle({Name = "Hitbox Expander", CurrentValue = false, Callback = function(v) Settings.Hitbox = v end})
 
-Visuals:CreateToggle({Name = "Highlight ESP", CurrentValue = false, Callback = function(v) Settings.ESP = v end})
+Visuals:CreateToggle({Name = "Box ESP (Drawing)", CurrentValue = false, Callback = function(v) Settings.ESP = v end})
+Visuals:CreateToggle({Name = "Tracers (Çizgiler)", CurrentValue = false, Callback = function(v) Settings.Tracers = v end})
 
 -- [ SERVİSLER ]
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local Camera = workspace.CurrentCamera
 local LocalPlayer = Players.LocalPlayer
-local VirtualUser = game:GetService("VirtualUser")
 
--- [ FOV ÇEMBERİ ]
-local ScreenGui = Instance.new("ScreenGui", game:GetService("CoreGui"))
-local FOVFrame = Instance.new("Frame", ScreenGui)
-FOVFrame.BackgroundTransparency = 1
-FOVFrame.AnchorPoint = Vector2.new(0.5, 0.5)
-local UIStroke = Instance.new("UIStroke", FOVFrame); UIStroke.Color = Color3.new(1,1,1); UIStroke.Thickness = 1
-local UICorner = Instance.new("UICorner", FOVFrame); UICorner.CornerRadius = UDim.new(1, 0)
+-- [ DRAWING API ESP SİSTEMİ ]
+local function CreateESP(Player)
+    local Box = Drawing.new("Square")
+    Box.Visible = false
+    Box.Color = Color3.new(1, 0, 0)
+    Box.Thickness = 1
+    Box.Filled = false
 
--- [ HEDEF SİSTEMİ ]
+    local Tracer = Drawing.new("Line")
+    Tracer.Visible = false
+    Tracer.Color = Color3.new(1, 1, 1)
+    Tracer.Thickness = 1
+
+    local function Update()
+        local Connection
+        Connection = RunService.RenderStepped:Connect(function()
+            if Player.Character and Player.Character:FindFirstChild("HumanoidRootPart") and Player.Character:FindFirstChild("Humanoid") and Player.Character.Humanoid.Health > 0 then
+                local RootPart = Player.Character.HumanoidRootPart
+                local Pos, OnScreen = Camera:WorldToViewportPoint(RootPart.Position)
+
+                if OnScreen and Settings.ESP then
+                    if Settings.TeamCheck and Player.Team == LocalPlayer.Team then
+                        Box.Visible = false
+                        Tracer.Visible = false
+                    else
+                        -- Kutu Boyut Hesaplama
+                        local Size = (Camera:WorldToViewportPoint(RootPart.Position - Vector3.new(0, 3, 0)).Y - Camera:WorldToViewportPoint(RootPart.Position + Vector3.new(0, 2.6, 0)).Y)
+                        Box.Size = Vector2.new(Size * 0.6, Size)
+                        Box.Position = Vector2.new(Pos.X - Box.Size.X / 2, Pos.Y - Box.Size.Y / 2)
+                        Box.Visible = true
+
+                        -- Tracer (Çizgi)
+                        if Settings.Tracers then
+                            Tracer.From = Vector2.new(Camera.ViewportSize.X / 2, Camera.ViewportSize.Y)
+                            Tracer.To = Vector2.new(Pos.X, Pos.Y)
+                            Tracer.Visible = true
+                        else
+                            Tracer.Visible = false
+                        end
+                    end
+                else
+                    Box.Visible = false
+                    Tracer.Visible = false
+                end
+            else
+                Box.Visible = false
+                Tracer.Visible = false
+                if not Player.Parent then
+                    Box:Remove()
+                    Tracer:Remove()
+                    Connection:Disconnect()
+                end
+            end
+        end)
+    end
+    coroutine.wrap(Update)()
+end
+
+-- Mevcut oyunculara uygula
+for _, v in pairs(Players:GetPlayers()) do
+    if v ~= LocalPlayer then CreateESP(v) end
+end
+Players.PlayerAdded:Connect(function(v) CreateESP(v) end)
+
+-- [ HEDEF BULUCU ]
 local Target = nil
 task.spawn(function()
     while task.wait(0.1) do
         local closest, dist = nil, Settings.FOV
         local center = Vector2.new(Camera.ViewportSize.X/2, Camera.ViewportSize.Y/2)
         
-        FOVFrame.Position = UDim2.new(0, center.X, 0, center.Y)
-        FOVFrame.Size = UDim2.new(0, Settings.FOV * 2, 0, Settings.FOV * 2)
-        FOVFrame.Visible = Settings.SilentAim or Settings.Aimbot
-
         for _, p in pairs(Players:GetPlayers()) do
-            if p ~= LocalPlayer and p.Character and p.Character:FindFirstChild("Humanoid") and p.Character.Humanoid.Health > 0 then
+            if p ~= LocalPlayer and p.Character and p.Character:FindFirstChild("HumanoidRootPart") and p.Character.Humanoid.Health > 0 then
                 if Settings.TeamCheck and p.Team == LocalPlayer.Team then continue end
-                local root = p.Character:FindFirstChild("HumanoidRootPart")
-                if root then
-                    local pos, onScreen = Camera:WorldToViewportPoint(root.Position)
-                    if onScreen then
-                        local mag = (Vector2.new(pos.X, pos.Y) - center).Magnitude
-                        if mag < dist then dist = mag; closest = p end
-                    end
+                local pos, onScreen = Camera:WorldToViewportPoint(p.Character.HumanoidRootPart.Position)
+                if onScreen then
+                    local mag = (Vector2.new(pos.X, pos.Y) - center).Magnitude
+                    if mag < dist then dist = mag; closest = p end
                 end
             end
         end
@@ -77,52 +128,38 @@ task.spawn(function()
     end
 end)
 
--- [ KAMERA (AIMBOT) & TRIGGERBOT DÖNGÜSÜ - RENDERSTEPPED ]
-local LastShot = 0
+-- [ AIMBOT & TRIGGERBOT DÖNGÜSÜ ]
 RunService.RenderStepped:Connect(function()
-    -- Kamera her zaman RenderStepped içinde yönlendirilmeli!
+    -- Aimbot
     if Settings.Aimbot and Target and Target.Character and Target.Character:FindFirstChild(Settings.HitPart) then
         local targetPos = Target.Character[Settings.HitPart].Position
         Camera.CFrame = Camera.CFrame:Lerp(CFrame.lookAt(Camera.CFrame.Position, targetPos), Settings.Smoothness)
     end
-    
-    -- Triggerbot (Kasmaması için bekleme süresini 'tick()' ile çözdük)
+
+    -- Triggerbot (Mobile Click Fix)
     if Settings.Triggerbot and Target then
-        if tick() - LastShot > 0.1 then -- Saniyede 10 kez tıklar (Hata vermez)
-            LastShot = tick()
-            VirtualUser:ClickButton1(Vector2.new(0,0))
+        -- Bazı oyunlarda mouse1click() veya mouse1press() daha iyi çalışır
+        if mouse1click then
+            mouse1click()
+        elseif click_detector then -- Alternatif mobil metod
+            click_detector()
+        else
+            game:GetService("VirtualUser"):Button1Down(Vector2.new(0,0))
+            task.wait()
+            game:GetService("VirtualUser"):Button1Up(Vector2.new(0,0))
         end
     end
-end)
-
--- [ ESP & HITBOX DÖNGÜSÜ - HEARTBEAT ]
-RunService.Heartbeat:Connect(function()
-    for _, p in pairs(Players:GetPlayers()) do
-        if p == LocalPlayer or not p.Character then continue end
-        
-        -- Hitbox
-        if Settings.Hitbox and p.Character:FindFirstChild("Head") then
-            if p.Character.Head.Size.X ~= Settings.HitboxSize then
-                p.Character.Head.Size = Vector3.new(Settings.HitboxSize, Settings.HitboxSize, Settings.HitboxSize)
-                p.Character.Head.Transparency = 0.6
-                p.Character.Head.CanCollide = false
+    
+    -- Hitbox (Loop yerine RenderStepped içinde kontrol daha sağlamdır)
+    if Settings.Hitbox then
+        for _, p in pairs(Players:GetPlayers()) do
+            if p ~= LocalPlayer and p.Character and p.Character:FindFirstChild("Head") then
+                if not (Settings.TeamCheck and p.Team == LocalPlayer.Team) then
+                    p.Character.Head.Size = Vector3.new(Settings.HitboxSize, Settings.HitboxSize, Settings.HitboxSize)
+                    p.Character.Head.Transparency = 0.5
+                    p.Character.Head.CanCollide = false
+                end
             end
-        end
-
-        -- ESP (CoreGui yerine Character içine atıldı, Delta artık görecek)
-        local hl = p.Character:FindFirstChild("GG_Highlight")
-        if Settings.ESP and p.Character:FindFirstChild("Humanoid") and p.Character.Humanoid.Health > 0 then
-            if not hl then
-                hl = Instance.new("Highlight")
-                hl.Name = "GG_Highlight"
-                hl.Parent = p.Character -- Delta mobilde hata vermemesi için direkt karaktere eklendi
-            end
-            hl.Enabled = not (Settings.TeamCheck and p.Team == LocalPlayer.Team)
-            hl.FillColor = (p.Team == LocalPlayer.Team) and Color3.new(0,1,0) or Color3.new(1,0,0)
-            hl.FillTransparency = 0.5
-            hl.OutlineTransparency = 0
-        else
-            if hl then hl:Destroy() end
         end
     end
 end)
@@ -143,4 +180,4 @@ OldNamecall = hookmetamethod(game, "__namecall", function(self, ...)
     return OldNamecall(self, ...)
 end)
 
-Rayfield:Notify({Title = "G&G V21.1", Content = "Motor arızası giderildi. Sistem stabil.", Duration = 4})
+Rayfield:Notify({Title = "G&G V22", Content = "Drawing API Devreye Girdi!", Duration = 3})
