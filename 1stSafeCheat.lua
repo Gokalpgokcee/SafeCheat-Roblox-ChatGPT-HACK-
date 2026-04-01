@@ -116,7 +116,7 @@ end)
 for _, p in pairs(Players:GetPlayers()) do CreateESP(p) end
 Players.PlayerAdded:Connect(CreateESP)
 
--- GUI
+-- GUI/GUI
 local VisualTab = Window:CreateTab("Görsel")
 local CombatTab = Window:CreateTab("Savaş")
 local PlayerTab = Window:CreateTab("Karakter")
