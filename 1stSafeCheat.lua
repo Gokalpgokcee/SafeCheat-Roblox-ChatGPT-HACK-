@@ -1,9 +1,9 @@
 local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
 
 local Window = Rayfield:CreateWindow({
-   Name = "G&G SafeCheat | V12 GOD MODE",
-   LoadingTitle = "Gokalp Ultimate System",
-   LoadingSubtitle = "by Gemini (V12.0)",
+   Name = "G&G SafeCheat | V13 HYPER-TARGET",
+   LoadingTitle = "Gokalp Engineering",
+   LoadingSubtitle = "by Gemini (V13.0)",
    ConfigurationSaving = { Enabled = false }
 })
 
@@ -13,18 +13,15 @@ local Settings = {
     TracerEnabled = false,
     Names = false,
     Distances = false,
-    HealthBar = false, -- Yeni Health Bar
+    HealthBar = false,
     BoxColor = Color3.fromRGB(0, 255, 0),
     AimbotEnabled = false,
     WallCheck = true,
     FovRadius = 150,
     ShowFov = false,
-    Smoothness = 0.2, -- Yumuşaklık Geri Geldi
-    AimPart = "HumanoidRootPart",
-    WalkSpeed = 16,
-    FlyEnabled = false,
-    FlySpeed = 50,
-    NoclipEnabled = false
+    Smoothness = 0.2,
+    AimPart = "HumanoidRootPart", -- Varsayılan hedef
+    WalkSpeed = 16
 }
 
 local Players = game:GetService("Players")
@@ -32,12 +29,12 @@ local RS = game:GetService("RunService")
 local Camera = workspace.CurrentCamera
 local LocalPlayer = Players.LocalPlayer
 
--- FOV ÇEMBERİ FIX (Kesin Görünür)
+-- FOV ÇEMBERİ (YENİDEN YAPILANDIRILDI)
 local FovCircle = Drawing.new("Circle")
-FovCircle.Thickness = 1
+FovCircle.Thickness = 1.5
 FovCircle.Color = Color3.fromRGB(255, 255, 255)
 FovCircle.Filled = false
-FovCircle.Transparency = 1
+FovCircle.Transparency = 0.7 -- Görünürlük artırıldı
 FovCircle.Visible = false
 
 -- WALL CHECK
@@ -53,7 +50,7 @@ local function IsVisible(TargetPart)
     return Result == nil
 end
 
--- PRO ESP (BOX, TRACER, HEALTH BAR)
+-- ESP SİSTEMİ
 local function CreateESP(Player)
     local Box = Drawing.new("Square")
     local Tracer = Drawing.new("Line")
@@ -72,70 +69,51 @@ local function CreateESP(Player)
                 local SizeY = (Camera:WorldToViewportPoint(Root.Position - Vector3.new(0, 3, 0)).Y - Camera:WorldToViewportPoint(Root.Position + Vector3.new(0, 2.6, 0)).Y)
                 local SizeX = SizeY * 0.6
                 
-                -- Box
                 Box.Visible = true
                 Box.Color = Settings.BoxColor
                 Box.Size = Vector2.new(SizeX, SizeY)
                 Box.Position = Vector2.new(Pos.X - SizeX / 2, Pos.Y - SizeY / 2)
-                Box.Thickness = 1
                 Box.Filled = false
                 
-                -- Dynamic Tracer
                 if Settings.TracerEnabled then
-                    local ColorFactor = math.clamp(Distance / 200, 0, 1)
                     Tracer.Visible = true
                     Tracer.From = Vector2.new(Camera.ViewportSize.X / 2, Camera.ViewportSize.Y)
                     Tracer.To = Vector2.new(Pos.X, Pos.Y + (SizeY / 2))
-                    Tracer.Color = Color3.fromHSV(ColorFactor * 0.33, 1, 1)
+                    Tracer.Color = Color3.fromHSV(math.clamp(Distance / 200, 0, 1) * 0.33, 1, 1)
                     Tracer.Thickness = 1
                 else Tracer.Visible = false end
 
-                -- HEALTH BAR (PRO SİSTEM)
                 if Settings.HealthBar then
-                    local HealthPercent = Hum.Health / Hum.MaxHealth
-                    local BarHeight = SizeY
-                    local BarPos = Vector2.new(Pos.X - (SizeX / 2) - 6, Pos.Y - (SizeY / 2))
-                    
+                    local HP = Hum.Health / Hum.MaxHealth
                     HealthBarOutline.Visible = true
-                    HealthBarOutline.Size = Vector2.new(3, BarHeight)
-                    HealthBarOutline.Position = BarPos
-                    HealthBarOutline.Color = Color3.new(0,0,0)
+                    HealthBarOutline.Size = Vector2.new(3, SizeY)
+                    HealthBarOutline.Position = Vector2.new(Pos.X - (SizeX / 2) - 6, Pos.Y - (SizeY / 2))
                     HealthBarOutline.Filled = true
                     
                     HealthBar.Visible = true
-                    HealthBar.Size = Vector2.new(2, BarHeight * HealthPercent)
-                    HealthBar.Position = Vector2.new(BarPos.X + 0.5, BarPos.Y + (BarHeight * (1 - HealthPercent)))
-                    HealthBar.Color = Color3.fromHSV(HealthPercent * 0.33, 1, 1)
+                    HealthBar.Size = Vector2.new(2, SizeY * HP)
+                    HealthBar.Position = Vector2.new(Pos.X - (SizeX / 2) - 5.5, Pos.Y - (SizeY / 2) + (SizeY * (1 - HP)))
+                    HealthBar.Color = Color3.fromHSV(HP * 0.33, 1, 1)
                     HealthBar.Filled = true
-                else
-                    HealthBar.Visible = false
-                    HealthBarOutline.Visible = false
-                end
+                else HealthBar.Visible = false HealthBarOutline.Visible = false end
 
-                -- INFO (Name & Distance & HP Number)
                 local DisplayText = ""
                 if Settings.Names then DisplayText = DisplayText .. Player.Name .. "\n" end
                 if Settings.Distances then DisplayText = DisplayText .. math.floor(Distance) .. "m\n" end
                 if Settings.HealthBar then DisplayText = DisplayText .. "HP: " .. math.floor(Hum.Health) end
                 
-                if DisplayText ~= "" then
-                    InfoTag.Visible = true
-                    InfoTag.Text = DisplayText
-                    InfoTag.Position = Vector2.new(Pos.X, Pos.Y - (SizeY / 2) - 25)
-                    InfoTag.Center = true
-                    InfoTag.Outline = true
-                    InfoTag.Size = 13
-                else InfoTag.Visible = false end
-            else
-                Box.Visible = false Tracer.Visible = false InfoTag.Visible = false HealthBar.Visible = false HealthBarOutline.Visible = false
-            end
-        else
-            Box.Visible = false Tracer.Visible = false InfoTag.Visible = false HealthBar.Visible = false HealthBarOutline.Visible = false
-        end
+                InfoTag.Visible = (DisplayText ~= "")
+                InfoTag.Text = DisplayText
+                InfoTag.Position = Vector2.new(Pos.X, Pos.Y - (SizeY / 2) - 25)
+                InfoTag.Center = true
+                InfoTag.Outline = true
+                InfoTag.Size = 13
+            else Box.Visible = false Tracer.Visible = false InfoTag.Visible = false HealthBar.Visible = false HealthBarOutline.Visible = false end
+        else Box.Visible = false Tracer.Visible = false InfoTag.Visible = false HealthBar.Visible = false HealthBarOutline.Visible = false end
     end)
 end
 
--- AIMBOT
+-- EN YAKIN HEDEF
 local function GetClosest()
     local Target = nil
     local Dist = Settings.FovRadius
@@ -154,14 +132,13 @@ local function GetClosest()
     return Target
 end
 
--- MAIN LOOP
+-- ANA DÖNGÜ
 RS.RenderStepped:Connect(function()
-    -- FOV Fix
-    FovCircle.Position = Vector2.new(Camera.ViewportSize.X / 2, Camera.ViewportSize.Y / 2)
+    local Center = Vector2.new(Camera.ViewportSize.X / 2, Camera.ViewportSize.Y / 2)
+    FovCircle.Position = Center
     FovCircle.Radius = Settings.FovRadius
     FovCircle.Visible = Settings.ShowFov
 
-    -- Aimbot Smooth
     if Settings.AimbotEnabled then
         local T = GetClosest()
         if T then
@@ -182,20 +159,23 @@ local VisualTab = Window:CreateTab("Görsel")
 local CombatTab = Window:CreateTab("Savaş")
 local MiscTab = Window:CreateTab("Karakter")
 
-VisualTab:CreateSection("ESP Ayarları")
 VisualTab:CreateToggle({Name = "Box ESP", CurrentValue = false, Callback = function(v) Settings.EspEnabled = v end})
 VisualTab:CreateToggle({Name = "Dinamik Tracers", CurrentValue = false, Callback = function(v) Settings.TracerEnabled = v end})
-VisualTab:CreateToggle({Name = "Profesyonel Health Bar", CurrentValue = false, Callback = function(v) Settings.HealthBar = v end})
-VisualTab:CreateToggle({Name = "İsimleri Göster", CurrentValue = false, Callback = function(v) Settings.Names = v end})
-VisualTab:CreateToggle({Name = "Mesafeyi Göster", CurrentValue = false, Callback = function(v) Settings.Distances = v end})
+VisualTab:CreateToggle({Name = "Pro Health Bar", CurrentValue = false, Callback = function(v) Settings.HealthBar = v end})
 
-CombatTab:CreateSection("Aimbot")
+CombatTab:CreateSection("Aimbot Kontrol")
 CombatTab:CreateToggle({Name = "Aimbot Aktif", CurrentValue = false, Callback = function(v) Settings.AimbotEnabled = v end})
-CombatTab:CreateToggle({Name = "Wall Check", CurrentValue = true, Callback = function(v) Settings.WallCheck = v end})
-CombatTab:CreateSlider({Name = "Yumuşaklık (Smoothness)", Range = {1, 10}, Increment = 1, CurrentValue = 2, Callback = function(v) Settings.Smoothness = v/10 end})
+CombatTab:CreateDropdown({
+   Name = "Hedef Bölgesi (Hitbox)",
+   Options = {"HumanoidRootPart", "Head", "UpperTorso", "LowerTorso"},
+   CurrentOption = "HumanoidRootPart",
+   Callback = function(Option) Settings.AimPart = Option end,
+})
+CombatTab:CreateSlider({Name = "Smoothness", Range = {1, 10}, Increment = 1, CurrentValue = 2, Callback = function(v) Settings.Smoothness = v/10 end})
 CombatTab:CreateToggle({Name = "FOV Çemberini Göster", CurrentValue = false, Callback = function(v) Settings.ShowFov = v end})
 CombatTab:CreateSlider({Name = "FOV Çapı", Range = {50, 800}, Increment = 10, CurrentValue = 150, Callback = function(v) Settings.FovRadius = v end})
 
 MiscTab:CreateSlider({Name = "Hız", Range = {16, 300}, Increment = 1, CurrentValue = 16, Callback = function(v) Settings.WalkSpeed = v end})
 
-Rayfield:Notify({Title = "G&G SafeCheat GOD", Content = "V12 Aktif! FOV düzeltildi, Smoothness geri geldi ve Health Bar eklendi."})
+Rayfield:Notify({Title = "G&G SafeCheat V13", Content = "Hyper-Target Sürümü Hazır! Hitbox seçebilirsin."})
+
