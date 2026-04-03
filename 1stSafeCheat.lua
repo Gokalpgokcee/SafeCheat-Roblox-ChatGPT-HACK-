@@ -1,9 +1,17 @@
-local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
+-- G&G SafeCheat V17 ULTRA-COMPATIBLE
+local Success, Rayfield = pcall(function()
+    return loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
+end)
+
+if not Success or not Rayfield then
+    warn("Rayfield yuklenemedi, baglantinizi kontrol edin!")
+    return
+end
 
 local Window = Rayfield:CreateWindow({
-   Name = "G&G SafeCheat | V16 ELITE",
-   LoadingTitle = "Gokalp Engineering",
-   LoadingSubtitle = "by Gemini (V16.0)",
+   Name = "G&G SafeCheat | V17 ULTRA",
+   LoadingTitle = "Gokalp Premium Hub",
+   LoadingSubtitle = "by Gemini (V17.0)",
    ConfigurationSaving = { Enabled = false }
 })
 
@@ -17,8 +25,7 @@ local Settings = {
     BoxColor = Color3.fromRGB(0, 255, 0),
     AimbotEnabled = false,
     WallCheck = true,
-    FovRadius = 150,
-    ShowFov = false,
+    FovRadius = 250,
     Smoothness = 0.2,
     AimPart = "HumanoidRootPart",
     WalkSpeed = 16
@@ -28,14 +35,6 @@ local Players = game:GetService("Players")
 local RS = game:GetService("RunService")
 local Camera = workspace.CurrentCamera
 local LocalPlayer = Players.LocalPlayer
-
--- FOV ÇEMBERİ (Görünürlük Fixlendi)
-local FovCircle = Drawing.new("Circle")
-FovCircle.Thickness = 1.5
-FovCircle.Color = Color3.fromRGB(255, 255, 255)
-FovCircle.Filled = false
-FovCircle.Transparency = 1 -- Tam görünürlük
-FovCircle.Visible = false
 
 -- WALL CHECK
 local function IsVisible(TargetPart)
@@ -86,13 +85,13 @@ local function CreateESP(Player)
                     local HP = Hum.Health / Hum.MaxHealth
                     HealthBarOutline.Visible = true
                     HealthBarOutline.Size = Vector2.new(4, SizeY)
-                    HealthBarOutline.Position = Vector2.new(Pos.X - (SizeX / 2) - 6, Pos.Y - (SizeY / 2))
+                    HealthBarOutline.Position = Vector2.new(Pos.X - (SizeX / 2) - 8, Pos.Y - (SizeY / 2))
                     HealthBarOutline.Color = Color3.new(0,0,0)
                     HealthBarOutline.Filled = true
                     
                     HealthBar.Visible = true
                     HealthBar.Size = Vector2.new(2, SizeY * HP)
-                    HealthBar.Position = Vector2.new(Pos.X - (SizeX / 2) - 5, Pos.Y - (SizeY / 2) + (SizeY * (1 - HP)))
+                    HealthBar.Position = Vector2.new(Pos.X - (SizeX / 2) - 7, Pos.Y - (SizeY / 2) + (SizeY * (1 - HP)))
                     HealthBar.Color = Color3.fromHSV(HP * 0.33, 1, 1)
                     HealthBar.Filled = true
                 else HealthBar.Visible = false HealthBarOutline.Visible = false end
@@ -113,14 +112,13 @@ local function CreateESP(Player)
     end)
 end
 
--- EN YAKIN HEDEF (Bölge Mantığı Fixlendi)
+-- EN YAKIN HEDEF
 local function GetClosest()
     local Target = nil
     local Dist = Settings.FovRadius
     local Center = Vector2.new(Camera.ViewportSize.X / 2, Camera.ViewportSize.Y / 2)
     for _, v in pairs(Players:GetPlayers()) do
         if v ~= LocalPlayer and v.Character then
-            -- Seçilen bölgeyi bul, yoksa gövdeye odaklan (Fallback)
             local Part = v.Character:FindFirstChild(Settings.AimPart) or v.Character:FindFirstChild("HumanoidRootPart")
             if Part then
                 local Pos, On = Camera:WorldToViewportPoint(Part.Position)
@@ -136,11 +134,7 @@ local function GetClosest()
 end
 
 -- ANA DÖNGÜ
-RS.RenderStepped:Connect(function()
-    FovCircle.Position = Vector2.new(Camera.ViewportSize.X / 2, Camera.ViewportSize.Y / 2)
-    FovCircle.Radius = Settings.FovRadius
-    FovCircle.Visible = Settings.ShowFov
-
+RS.Heartbeat:Connect(function()
     if Settings.AimbotEnabled then
         local T = GetClosest()
         if T then
@@ -163,8 +157,20 @@ local MiscTab = Window:CreateTab("Karakter")
 
 VisualTab:CreateToggle({Name = "Box ESP", CurrentValue = false, Callback = function(v) Settings.EspEnabled = v end})
 VisualTab:CreateToggle({Name = "Dinamik Tracers", CurrentValue = false, Callback = function(v) Settings.TracerEnabled = v end})
-VisualTab:CreateToggle({Name = "Pro Health Bar + HP", CurrentValue = false, Callback = function(v) Settings.HealthBar = v end})
+VisualTab:CreateToggle({Name = "Pro Health Bar", CurrentValue = false, Callback = function(v) Settings.HealthBar = v end})
 VisualTab:CreateToggle({Name = "Mesafe Göster", CurrentValue = false, Callback = function(v) Settings.Distances = v end})
 
-CombatTab:CreateSection("Aimbot Kontrol
-   
+CombatTab:CreateSection("Aimbot")
+CombatTab:CreateToggle({Name = "Aimbot Aktif", CurrentValue = false, Callback = function(v) Settings.AimbotEnabled = v end})
+CombatTab:CreateDropdown({
+   Name = "Hedef Bölgesi",
+   Options = {"HumanoidRootPart", "Head", "UpperTorso", "LowerTorso"},
+   CurrentOption = "HumanoidRootPart",
+   Callback = function(Option) Settings.AimPart = Option end,
+})
+CombatTab:CreateSlider({Name = "Smoothness", Range = {1, 10}, Increment = 1, CurrentValue = 2, Callback = function(v) Settings.Smoothness = v/10 end})
+CombatTab:CreateSlider({Name = "Menzil (Range)", Range = {50, 1000}, Increment = 50, CurrentValue = 250, Callback = function(v) Settings.FovRadius = v end})
+
+MiscTab:CreateSlider({Name = "Hız", Range = {16, 300}, Increment = 1, CurrentValue = 16, Callback = function(v) Settings.WalkSpeed = v end})
+
+Rayfield:Notify({Title = "G&G SafeCheat V17", Content = "Ultra Sürüm Yüklendi!"})
