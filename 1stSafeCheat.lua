@@ -1,9 +1,9 @@
 local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
 
 local Window = Rayfield:CreateWindow({
-   Name = "G&G SafeCheat | V13 HYPER-TARGET",
-   LoadingTitle = "Gokalp Engineering",
-   LoadingSubtitle = "by Gemini (V13.0)",
+   Name = "G&G SafeCheat | V15 PRECISION",
+   LoadingTitle = "Gokalp Engineering System",
+   LoadingSubtitle = "by Gemini (V15.0)",
    ConfigurationSaving = { Enabled = false }
 })
 
@@ -12,15 +12,12 @@ local Settings = {
     EspEnabled = false,
     TracerEnabled = false,
     Names = false,
-    Distances = false,
     HealthBar = false,
-    BoxColor = Color3.fromRGB(0, 255, 0),
     AimbotEnabled = false,
     WallCheck = true,
-    FovRadius = 150,
-    ShowFov = false,
-    Smoothness = 0.2,
-    AimPart = "HumanoidRootPart", -- Varsayılan hedef
+    AimPart = "Head", -- Varsayılan Bölge
+    FovRadius = 300,
+    Smoothness = 0.15,
     WalkSpeed = 16
 }
 
@@ -29,24 +26,19 @@ local RS = game:GetService("RunService")
 local Camera = workspace.CurrentCamera
 local LocalPlayer = Players.LocalPlayer
 
--- FOV ÇEMBERİ (YENİDEN YAPILANDIRILDI)
-local FovCircle = Drawing.new("Circle")
-FovCircle.Thickness = 1.5
-FovCircle.Color = Color3.fromRGB(255, 255, 255)
-FovCircle.Filled = false
-FovCircle.Transparency = 0.7 -- Görünürlük artırıldı
-FovCircle.Visible = false
-
--- WALL CHECK
-local function IsVisible(TargetPart)
+-- GÖRÜNÜRLÜK KONTROLÜ (Daha Stabil)
+local function IsVisible(Part)
     if not Settings.WallCheck then return true end
     local Character = LocalPlayer.Character
     if not Character then return false end
+    
     local Params = RaycastParams.new()
     Params.FilterType = Enum.RaycastFilterType.Exclude
-    Params.FilterDescendantsInstances = {Character, TargetPart.Parent}
-    local Direction = (TargetPart.Position - Camera.CFrame.Position).Unit * (TargetPart.Position - Camera.CFrame.Position).Magnitude
+    Params.FilterDescendantsInstances = {Character, Part.Parent}
+    
+    local Direction = (Part.Position - Camera.CFrame.Position).Unit * (Part.Position - Camera.CFrame.Position).Magnitude
     local Result = workspace:Raycast(Camera.CFrame.Position, Direction, Params)
+    
     return Result == nil
 end
 
@@ -54,98 +46,75 @@ end
 local function CreateESP(Player)
     local Box = Drawing.new("Square")
     local Tracer = Drawing.new("Line")
-    local InfoTag = Drawing.new("Text")
-    local HealthBarOutline = Drawing.new("Square")
-    local HealthBar = Drawing.new("Square")
+    local Info = Drawing.new("Text")
     
     RS.RenderStepped:Connect(function()
         if Settings.EspEnabled and Player.Character and Player.Character:FindFirstChild("HumanoidRootPart") and Player ~= LocalPlayer then
             local Root = Player.Character.HumanoidRootPart
-            local Hum = Player.Character:FindFirstChild("Humanoid")
             local Pos, OnScreen = Camera:WorldToViewportPoint(Root.Position)
             
-            if OnScreen and Hum then
-                local Distance = (LocalPlayer.Character.HumanoidRootPart.Position - Root.Position).Magnitude
+            if OnScreen then
                 local SizeY = (Camera:WorldToViewportPoint(Root.Position - Vector3.new(0, 3, 0)).Y - Camera:WorldToViewportPoint(Root.Position + Vector3.new(0, 2.6, 0)).Y)
                 local SizeX = SizeY * 0.6
                 
                 Box.Visible = true
-                Box.Color = Settings.BoxColor
                 Box.Size = Vector2.new(SizeX, SizeY)
                 Box.Position = Vector2.new(Pos.X - SizeX / 2, Pos.Y - SizeY / 2)
+                Box.Color = Color3.fromRGB(0, 255, 0)
                 Box.Filled = false
                 
                 if Settings.TracerEnabled then
                     Tracer.Visible = true
                     Tracer.From = Vector2.new(Camera.ViewportSize.X / 2, Camera.ViewportSize.Y)
                     Tracer.To = Vector2.new(Pos.X, Pos.Y + (SizeY / 2))
-                    Tracer.Color = Color3.fromHSV(math.clamp(Distance / 200, 0, 1) * 0.33, 1, 1)
-                    Tracer.Thickness = 1
+                    Tracer.Color = Color3.fromRGB(255, 255, 255)
                 else Tracer.Visible = false end
 
-                if Settings.HealthBar then
-                    local HP = Hum.Health / Hum.MaxHealth
-                    HealthBarOutline.Visible = true
-                    HealthBarOutline.Size = Vector2.new(3, SizeY)
-                    HealthBarOutline.Position = Vector2.new(Pos.X - (SizeX / 2) - 6, Pos.Y - (SizeY / 2))
-                    HealthBarOutline.Filled = true
-                    
-                    HealthBar.Visible = true
-                    HealthBar.Size = Vector2.new(2, SizeY * HP)
-                    HealthBar.Position = Vector2.new(Pos.X - (SizeX / 2) - 5.5, Pos.Y - (SizeY / 2) + (SizeY * (1 - HP)))
-                    HealthBar.Color = Color3.fromHSV(HP * 0.33, 1, 1)
-                    HealthBar.Filled = true
-                else HealthBar.Visible = false HealthBarOutline.Visible = false end
-
-                local DisplayText = ""
-                if Settings.Names then DisplayText = DisplayText .. Player.Name .. "\n" end
-                if Settings.Distances then DisplayText = DisplayText .. math.floor(Distance) .. "m\n" end
-                if Settings.HealthBar then DisplayText = DisplayText .. "HP: " .. math.floor(Hum.Health) end
-                
-                InfoTag.Visible = (DisplayText ~= "")
-                InfoTag.Text = DisplayText
-                InfoTag.Position = Vector2.new(Pos.X, Pos.Y - (SizeY / 2) - 25)
-                InfoTag.Center = true
-                InfoTag.Outline = true
-                InfoTag.Size = 13
-            else Box.Visible = false Tracer.Visible = false InfoTag.Visible = false HealthBar.Visible = false HealthBarOutline.Visible = false end
-        else Box.Visible = false Tracer.Visible = false InfoTag.Visible = false HealthBar.Visible = false HealthBarOutline.Visible = false end
+                if Settings.Names then
+                    Info.Visible = true
+                    Info.Text = Player.Name
+                    Info.Position = Vector2.new(Pos.X, Pos.Y - (SizeY / 2) - 15)
+                    Info.Center = true
+                    Info.Outline = true
+                else Info.Visible = false end
+            else Box.Visible = false Tracer.Visible = false Info.Visible = false end
+        else Box.Visible = false Tracer.Visible = false Info.Visible = false end
     end)
 end
 
--- EN YAKIN HEDEF
-local function GetClosest()
+-- EN YAKIN HEDEFİ BULMA
+local function GetTarget()
     local Target = nil
     local Dist = Settings.FovRadius
     local Center = Vector2.new(Camera.ViewportSize.X / 2, Camera.ViewportSize.Y / 2)
+
     for _, v in pairs(Players:GetPlayers()) do
-        if v ~= LocalPlayer and v.Character and v.Character:FindFirstChild(Settings.AimPart) then
-            local Part = v.Character[Settings.AimPart]
-            local Pos, On = Camera:WorldToViewportPoint(Part.Position)
-            local Mag = (Center - Vector2.new(Pos.X, Pos.Y)).Magnitude
-            if Mag < Dist and On and IsVisible(Part) then
-                Target = v
-                Dist = Mag
+        if v ~= LocalPlayer and v.Character then
+            -- Seçilen bölgeyi kontrol et, yoksa RootPart'a dön
+            local Part = v.Character:FindFirstChild(Settings.AimPart) or v.Character:FindFirstChild("HumanoidRootPart")
+            if Part then
+                local Pos, On = Camera:WorldToViewportPoint(Part.Position)
+                local Mag = (Center - Vector2.new(Pos.X, Pos.Y)).Magnitude
+                if Mag < Dist and On and IsVisible(Part) then
+                    Target = Part
+                    Dist = Mag
+                end
             end
         end
     end
     return Target
 end
 
--- ANA DÖNGÜ
-RS.RenderStepped:Connect(function()
-    local Center = Vector2.new(Camera.ViewportSize.X / 2, Camera.ViewportSize.Y / 2)
-    FovCircle.Position = Center
-    FovCircle.Radius = Settings.FovRadius
-    FovCircle.Visible = Settings.ShowFov
-
+-- AIMBOT ANA DÖNGÜ (Daha Stabil Çalışması İçin Heartbeat)
+RS.Heartbeat:Connect(function()
     if Settings.AimbotEnabled then
-        local T = GetClosest()
-        if T then
-            Camera.CFrame = Camera.CFrame:Lerp(CFrame.new(Camera.CFrame.Position, T.Character[Settings.AimPart].Position), Settings.Smoothness)
+        local TargetPart = GetTarget()
+        if TargetPart then
+            -- Lerp ile kilitlenme (Smoothness ayarına göre)
+            Camera.CFrame = Camera.CFrame:Lerp(CFrame.new(Camera.CFrame.Position, TargetPart.Position), Settings.Smoothness)
         end
     end
-
+    
     if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then
         LocalPlayer.Character.Humanoid.WalkSpeed = Settings.WalkSpeed
     end
@@ -160,22 +129,26 @@ local CombatTab = Window:CreateTab("Savaş")
 local MiscTab = Window:CreateTab("Karakter")
 
 VisualTab:CreateToggle({Name = "Box ESP", CurrentValue = false, Callback = function(v) Settings.EspEnabled = v end})
-VisualTab:CreateToggle({Name = "Dinamik Tracers", CurrentValue = false, Callback = function(v) Settings.TracerEnabled = v end})
-VisualTab:CreateToggle({Name = "Pro Health Bar", CurrentValue = false, Callback = function(v) Settings.HealthBar = v end})
+VisualTab:CreateToggle({Name = "Çizgiler", CurrentValue = false, Callback = function(v) Settings.TracerEnabled = v end})
+VisualTab:CreateToggle({Name = "İsimler", CurrentValue = false, Callback = function(v) Settings.Names = v end})
 
-CombatTab:CreateSection("Aimbot Kontrol")
+CombatTab:CreateSection("Aimbot Kontrolü")
 CombatTab:CreateToggle({Name = "Aimbot Aktif", CurrentValue = false, Callback = function(v) Settings.AimbotEnabled = v end})
+
 CombatTab:CreateDropdown({
-   Name = "Hedef Bölgesi (Hitbox)",
-   Options = {"HumanoidRootPart", "Head", "UpperTorso", "LowerTorso"},
-   CurrentOption = "HumanoidRootPart",
-   Callback = function(Option) Settings.AimPart = Option end,
+   Name = "Hedef Bölgesi",
+   Options = {"Head", "HumanoidRootPart", "UpperTorso", "LowerTorso"},
+   CurrentOption = "Head",
+   Callback = function(Option)
+      Settings.AimPart = Option
+      Rayfield:Notify({Title = "Hedef Değişti", Content = "Yeni Hedef: " .. Option})
+   end,
 })
-CombatTab:CreateSlider({Name = "Smoothness", Range = {1, 10}, Increment = 1, CurrentValue = 2, Callback = function(v) Settings.Smoothness = v/10 end})
-CombatTab:CreateToggle({Name = "FOV Çemberini Göster", CurrentValue = false, Callback = function(v) Settings.ShowFov = v end})
-CombatTab:CreateSlider({Name = "FOV Çapı", Range = {50, 800}, Increment = 10, CurrentValue = 150, Callback = function(v) Settings.FovRadius = v end})
+
+CombatTab:CreateSlider({Name = "Smoothness (Yumuşaklık)", Range = {1, 10}, Increment = 1, CurrentValue = 2, Callback = function(v) Settings.Smoothness = v/10 end})
+CombatTab:CreateSlider({Name = "Mesafe (Range)", Range = {100, 1500}, Increment = 50, CurrentValue = 300, Callback = function(v) Settings.FovRadius = v end})
+CombatTab:CreateToggle({Name = "Duvar Kontrolü", CurrentValue = true, Callback = function(v) Settings.WallCheck = v end})
 
 MiscTab:CreateSlider({Name = "Hız", Range = {16, 300}, Increment = 1, CurrentValue = 16, Callback = function(v) Settings.WalkSpeed = v end})
 
-Rayfield:Notify({Title = "G&G SafeCheat V13", Content = "Hyper-Target Sürümü Hazır! Hitbox seçebilirsin."})
-
+Rayfield:Notify({Title = "G&G SafeCheat V15", Content = "Precision sürümü aktif! Hitbox seçimi sorunsuz çalışıyor."})
